@@ -1,0 +1,9 @@
+﻿namespace PromptForge.Core.Model;
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="Semantic">for input: explains how to interpret data</param>
+/// <param name="Purpose">for output: explains the role in generation</param>
+/// <param name="Format">for both: describes representation details</param>
+public record PromptHint(string? Semantic, string? Purpose, string? Format);
