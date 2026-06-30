@@ -21,6 +21,26 @@ public class BufferState
 }
 
 [ObjectType]
+public class ProceduralCondition
+{
+    [InputHint(Semantic = "a unique identifier")]
+    public required string RuleId { get; init; }
+
+    [InputHint(Semantic = "structural condition to match against buffer states")]
+    public required StructData Condition { get; init; }
+
+    [InputHint(Semantic = "fuzzy/neural conditions or hints")]
+    public required StructData Semantics { get; init; }
+}
+
+[ObjectType]
+public class EvaluationInput
+{
+    public required BufferState[] BufferStates { get; init; }
+    public required ProceduralCondition[] Conditions { get; init; }
+}
+
+[ObjectType]
 public class BufferOperation
 {
     public required string TargetModuleId { get; init; }
@@ -43,26 +63,13 @@ public class ModuleSchema
 }
 
 [ObjectType]
-public class ProceduralCondition
-{
-    [InputHint(Semantic = "a unique identifier")]
-    public required string RuleId { get; init; }
-
-    [InputHint(Semantic = "structural condition to match against buffer states")]
-    public required StructData Condition { get; init; }
-
-    [InputHint(Semantic = "fuzzy/neural conditions or hints")]
-    public required StructData Semantics { get; init; }
-}
-
-[ObjectType]
 public class NeuroOperation
 {
     [PromptIgnore]
     public required string RuleId { get; init; }
 
     [InputHint(Semantic = "possible structurally incomplete commands, those incomplete ones need implementations to match the schemas")]
-    [InputHint(Target = HintTarget.MapValue, Semantic = "a command's params may be incomplete comparing the given schema")]
+    [InputHint(Target = HintTarget.ArrayElement, Semantic = "a command's params may be incomplete comparing the given schema")]
     public required BufferOperation[] Commands { get; init; }
     
     [InputHint(Semantic = "a key provides cases: merging into a command, a direct neuro operation, a ")]

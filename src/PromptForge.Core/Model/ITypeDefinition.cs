@@ -2,6 +2,7 @@
 
 public interface ITypeDefinition
 {
-    string Name { get; }
-    PromptHint? Hint { get; }
+    Type ClrType { get; }
+    string Name { get; set; }
+    PromptHint? Hint { get; set; }
 }

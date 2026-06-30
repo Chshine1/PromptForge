@@ -4,8 +4,10 @@ using PromptForge.Core.Model;
 
 namespace PromptForge.Core;
 
-public static class TypeMetadataBuilder
+public class TypeMetadataBuilder
 {
+    public readonly Dictionary<Type, ITypeDefinition> ClrToTypeDefinitions = new();
+
     private static readonly HashSet<Type> numericTypes =
     [
         typeof(byte), typeof(sbyte), typeof(short), typeof(ushort),
@@ -17,21 +19,28 @@ public static class TypeMetadataBuilder
 
     private static SimpleType GetSimpleType(Type type)
     {
-        if (type == typeof(string)) return new SimpleType("string");
-        if (type == typeof(bool)) return new SimpleType("boolean");
-        return IsNumeric(type) ? new SimpleType("number") : new SimpleType(type.Name);
+        if (type == typeof(string)) return new SimpleType(type, "string");
+        if (type == typeof(bool)) return new SimpleType(type, "boolean");
+        return IsNumeric(type) ? new SimpleType(type, "number") : new SimpleType(type, type.Name);
     }
 
-    public static ITypeDefinition FromType(Type type)
+    public ITypeDefinition FromClrType(Type clrType)
     {
-        if (type.IsPrimitive || type == typeof(string) || type == typeof(decimal) || type == typeof(DateTime) ||
-            type == typeof(Guid))
-            return GetSimpleType(type);
+        if (ClrToTypeDefinitions.TryGetValue(clrType, out var definition)) return definition;
 
-        var typeHints = HintAttributes.CollectFromType(type);
+        if (clrType.IsPrimitive || clrType == typeof(string) || clrType == typeof(decimal) ||
+            clrType == typeof(DateTime) ||
+            clrType == typeof(Guid))
+        {
+            var td = GetSimpleType(clrType);
+            ClrToTypeDefinitions[clrType] = td;
+            return td;
+        }
+
+        var typeHints = HintAttributes.CollectFromType(clrType);
         var hint = typeHints.BuildHint(HintTarget.TypeAndProperty);
 
-        var interfaces = (type.IsInterface ? type.GetInterfaces().Concat([type]) : type.GetInterfaces())
+        var interfaces = (clrType.IsInterface ? clrType.GetInterfaces().Concat([clrType]) : clrType.GetInterfaces())
             .Where(i =>
                 i.IsGenericType
                 && (i.GetGenericTypeDefinition() == typeof(IDictionary<,>)
@@ -48,9 +57,12 @@ public static class TypeMetadataBuilder
             var args = dictInterface.GetGenericArguments();
             if (args.Length != 2 || args[0] != typeof(string)) throw new InvalidOperationException("");
 
-            var valueType = FromType(args[1]);
+            var valueType = FromClrType(args[1]);
             var valueHint = typeHints.BuildHint(HintTarget.MapValue);
-            return new MapType(valueType, valueHint);
+
+            var td = new MapType(clrType, valueType, valueHint);
+            ClrToTypeDefinitions[clrType] = td;
+            return td;
         }
 
         var enumInterface = interfaces.FirstOrDefault(i =>
@@ -61,47 +73,50 @@ public static class TypeMetadataBuilder
             var args = enumInterface.GetGenericArguments();
             if (args.Length != 1) throw new InvalidOperationException();
 
-            var elementType = FromType(args[0]);
+            var elementType = FromClrType(args[0]);
             var elementHint = typeHints.BuildHint(HintTarget.ArrayElement);
-            return new ArrayType(elementType, elementHint);
+
+            var td = new ArrayType(clrType, elementType, elementHint);
+            ClrToTypeDefinitions[clrType] = td;
+            return td;
         }
 
-        var objectAttr = type.GetCustomAttribute<ObjectTypeAttribute>();
+        var objectAttr = clrType.GetCustomAttribute<ObjectTypeAttribute>();
         if (objectAttr is not null)
         {
-            var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            var properties = clrType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Where(p => p.CanRead)
                 .Where(p => p.GetCustomAttribute<PromptIgnoreAttribute>() == null)
                 .Select(p =>
                 {
                     var propHints = HintAttributes.CollectFromMember(p);
                     var propHint = propHints.BuildHint(HintTarget.TypeAndProperty);
-                    var propTypeDef = FromType(p.PropertyType);
+                    var propTypeDef = FromClrType(p.PropertyType);
 
-                    propTypeDef = propTypeDef switch
+                    switch (propTypeDef)
                     {
-                        MapType mapType => mapType with
-                        {
-                            ValueHint = propHints.BuildHint(HintTarget.MapValue)
-                        },
-                        ArrayType arrayType => arrayType with
-                        {
-                            ElementHint = propHints.BuildHint(HintTarget.ArrayElement)
-                        },
-                        _ => propTypeDef
-                    };
+                        case MapType mapType:
+                            mapType.ValueHint = propHints.BuildHint(HintTarget.MapValue);
+                            break;
+                        case ArrayType arrayType:
+                            arrayType.ElementHint = propHints.BuildHint(HintTarget.ArrayElement);
+                            break;
+                    }
 
                     return new PropertyDefinition(p.Name, propTypeDef, propHint);
                 })
                 .ToImmutableArray();
 
-            return new ObjectType(objectAttr.Name ?? type.Name, properties, hint);
+            return new ObjectType(clrType, objectAttr.Name ?? clrType.Name, properties, hint);
         }
 
-        var simpleTypeAttr = type.GetCustomAttribute<SimpleTypeAttribute>();
-        return simpleTypeAttr is not null
-            ? new SimpleType(simpleTypeAttr.Name ?? type.Name)
+        var simpleTypeAttr = clrType.GetCustomAttribute<SimpleTypeAttribute>();
+
+        var std = simpleTypeAttr is not null
+            ? new SimpleType(clrType, simpleTypeAttr.Name ?? clrType.Name)
             : throw new InvalidOperationException();
+        ClrToTypeDefinitions[clrType] = std;
+        return std;
     }
 
     private readonly struct HintAttributes
@@ -138,15 +153,25 @@ public static class TypeMetadataBuilder
 
             PromptHint? hint = null;
             if (input is not null)
-                hint = new PromptHint(Semantic: input.Semantic);
+                hint = new PromptHint(semantic: input.Semantic);
             if (output is not null)
-                hint = hint is null
-                    ? new PromptHint(Purpose: output.Purpose, Constraint: output.Constraint)
-                    : hint with { Purpose = output.Purpose, Constraint = output.Constraint };
-            if (format is not null)
-                hint = hint is null
-                    ? new PromptHint(Format: format.Format)
-                    : hint with { Format = format.Format };
+            {
+                if (hint is null) hint = new PromptHint(purpose: output.Purpose, constraint: output.Constraint);
+                else
+                {
+                    hint.Purpose = output.Purpose;
+                    hint.Constraint = output.Constraint;
+                }
+            }
+
+            if (format is null) return hint;
+
+            if (hint is null) hint = new PromptHint(format: format.Format);
+            else
+            {
+                hint.Format = format.Format;
+            }
+
             return hint;
         }
     }

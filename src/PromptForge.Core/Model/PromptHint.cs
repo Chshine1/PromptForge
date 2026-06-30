@@ -3,12 +3,18 @@
 /// <summary>
 /// 
 /// </summary>
-/// <param name="Semantic">for input: explains how to interpret data</param>
-/// <param name="Purpose">for output: explains the role in generation</param>
-/// <param name="Constraint">for output: explains the constraint</param>
-/// <param name="Format">for both: describes representation details</param>
-public record PromptHint(
-    string? Semantic = null,
-    string? Purpose = null,
-    string? Constraint = null,
-    string? Format = null);
+/// <param name="semantic">for input: explains how to interpret data</param>
+/// <param name="purpose">for output: explains the role in generation</param>
+/// <param name="constraint">for output: explains the constraint</param>
+/// <param name="format">for both: describes representation details</param>
+public class PromptHint(
+    string? semantic = null,
+    string? purpose = null,
+    string? constraint = null,
+    string? format = null)
+{
+    public string? Semantic { get; set; } = semantic;
+    public string? Purpose { get; set; } = purpose;
+    public string? Constraint { get; set; } = constraint;
+    public string? Format { get; set; } = format;
+}

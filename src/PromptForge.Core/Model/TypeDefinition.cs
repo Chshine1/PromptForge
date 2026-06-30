@@ -1,17 +1,40 @@
 ﻿namespace PromptForge.Core.Model;
 
-public record SimpleType(string Name, PromptHint? Hint = null) : ITypeDefinition;
-
-public record ObjectType(string Name, IEnumerable<PropertyDefinition> Properties, PromptHint? Hint = null) : ITypeDefinition;
-
-public record ArrayType(ITypeDefinition ElementType, PromptHint? ElementHint = null) : ITypeDefinition
+public class SimpleType(Type clrType, string name, PromptHint? hint = null) : ITypeDefinition
 {
-    public string Name => "Array";
-    public PromptHint? Hint => null;
+    public Type ClrType => clrType;
+    public string Name { get; set; } = name;
+    public PromptHint? Hint { get; set; } = hint;
 }
 
-public record MapType(ITypeDefinition ValueType, PromptHint? ValueHint = null) : ITypeDefinition
+public class ObjectType(Type clrType, string name, IEnumerable<PropertyDefinition> properties, PromptHint? hint = null)
+    : ITypeDefinition
 {
-    public string Name => "Map";
-    public PromptHint? Hint => null;
+    public Type ClrType => clrType;
+    public string Name { get; set; } = name;
+    public IEnumerable<PropertyDefinition> Properties { get; } = properties;
+    public PromptHint? Hint { get; set; } = hint;
+}
+
+public class ArrayType(
+    Type clrType,
+    ITypeDefinition elementType,
+    PromptHint? hint = null,
+    PromptHint? elementHint = null) : ITypeDefinition
+{
+    public Type ClrType => clrType;
+    public string Name { get; set; } = "Array";
+    public ITypeDefinition ElementType { get; } = elementType;
+    public PromptHint? Hint { get; set; } = hint;
+    public PromptHint? ElementHint { get; set; } = elementHint;
+}
+
+public class MapType(Type clrType, ITypeDefinition valueType, PromptHint? hint = null, PromptHint? valueHint = null)
+    : ITypeDefinition
+{
+    public Type ClrType => clrType;
+    public string Name { get; set; } = "Map";
+    public ITypeDefinition ValueType { get; } = valueType;
+    public PromptHint? Hint { get; set; } = hint;
+    public PromptHint? ValueHint { get; set; } = valueHint;
 }
