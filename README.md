@@ -60,11 +60,8 @@ ModuleState:
 
 **Syntax outline**:
 ```
-<property-name> [:<purpose>] (<type-name> [, <constraints>] [, format: <format>]) :
+<property-name> [:<purpose>] (<type-name> [, format: <format>] [, <constraints>]) :
 ```
-- `purpose` comes from `Hint.Purpose`
-- `constraints` are rendered as comma‑separated natural language fragments (e.g. `length between 1 and 50`, `one of: "admin", "user"`, `matching valid email`)
-- `format` is optional and describes desired serialization (e.g. `YYYY-MM-DD`, or a composite layout)
 
 **Degradation rules** (simpler, because type is mandatory):
 - The type name is always present.

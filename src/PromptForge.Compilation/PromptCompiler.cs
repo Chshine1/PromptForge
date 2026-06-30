@@ -43,7 +43,7 @@ public partial class PromptCompiler : IPromptCompiler
             else
             {
                 // {{schema:output}}
-                string outputSchema = "Not implemented";
+                var outputSchema = CompileOutput("output", contract.OutputType);
                 staticParts.Add(outputSchema);
                 parts.Add(_ => string.Empty);
             }
@@ -101,7 +101,7 @@ public partial class PromptCompiler : IPromptCompiler
             type.Hint?.Format != null ? $", format: {type.Hint.Format}" : "";
         var hasTypeInfo = typeSemanticHint != "" || formatHint != "" || type is ArrayType || type is MapType;
 
-        var typeInfo = hasTypeInfo ? $"(a {type.Name}{typeSemanticHint}{formatHint})" : "";
+        var typeInfo = hasTypeInfo ? $" (a {type.Name}{typeSemanticHint}{formatHint})" : "";
 
         builder.Append(new string(' ', depth * 2));
         builder.Append($"{propertyName}{propertySemantic}{typeInfo}:");
@@ -123,6 +123,50 @@ public partial class PromptCompiler : IPromptCompiler
                 {
                     builder.Append(
                         CompileInput(property.Name, property.TypeDefinition, property.Hint, depth));
+                }
+
+                break;
+            case SimpleType:
+                break;
+            default:
+                throw new NotSupportedException($"The type {type} is not supported.");
+        }
+
+        return builder.ToString();
+    }
+
+    private static string CompileOutput(string propertyName, ITypeDefinition type, PromptHint? propertyHint = null, int depth = 0)
+    {
+        var builder = new StringBuilder();
+
+        var propertyPurpose = propertyHint?.Purpose != null ? $": {propertyHint.Purpose}" : "";
+
+        var formatHint = propertyHint?.Format != null ? $", format: {propertyHint.Format}" :
+            type.Hint?.Format != null ? $", format: {type.Hint.Format}" : "";
+        var constraintHint = type.Hint?.Constraint != null ? $", {type.Hint.Constraint}" : "";
+        
+        var typeInfo = $" (a {type.Name}{formatHint}{constraintHint})";
+
+        builder.Append(new string(' ', depth * 2));
+        builder.Append($"{propertyName}{propertyPurpose}{typeInfo}:");
+        builder.AppendLine();
+
+        depth++;
+        switch (type)
+        {
+            case ArrayType arrayType:
+                builder.Append(
+                    CompileOutput("each element", arrayType.ElementType, arrayType.Hint, depth));
+                break;
+            case MapType mapType:
+                builder.Append(
+                    CompileOutput("each value", mapType.ValueType, mapType.Hint, depth));
+                break;
+            case ObjectType objectType:
+                foreach (var property in objectType.Properties)
+                {
+                    builder.Append(
+                        CompileOutput(property.Name, property.TypeDefinition, property.Hint, depth));
                 }
 
                 break;

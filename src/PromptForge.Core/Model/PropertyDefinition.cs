@@ -3,5 +3,4 @@
 public record PropertyDefinition(
     string Name,
     ITypeDefinition TypeDefinition,
-    PromptHint? Hint,
-    string? Constraints);
+    PromptHint? Hint);

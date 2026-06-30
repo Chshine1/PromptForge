@@ -1,8 +1,8 @@
 ﻿namespace PromptForge.Core.Model;
 
-public record SimpleType(string Name, PromptHint? Hint) : ITypeDefinition;
+public record SimpleType(string Name, PromptHint? Hint = null) : ITypeDefinition;
 
-public record ObjectType(string Name, PromptHint? Hint, IEnumerable<PropertyDefinition> Properties) : ITypeDefinition;
+public record ObjectType(string Name, IEnumerable<PropertyDefinition> Properties, PromptHint? Hint = null) : ITypeDefinition;
 
 public record ArrayType(ITypeDefinition ElementType) : ITypeDefinition
 {
