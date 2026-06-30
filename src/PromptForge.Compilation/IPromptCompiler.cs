@@ -1,8 +1,10 @@
-﻿using PromptForge.Core.Model;
+﻿using PromptForge.Core;
+using PromptForge.Core.Model;
 
 namespace PromptForge.Compilation;
 
 public interface IPromptCompiler
 {
-    IFillable<T> Compile<T>(PromptContract contract);
+    IPromptTemplate<T> Compile<T>(PromptContract contract);
+    void SetSerialization(ISerializer serializer);
 }

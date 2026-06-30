@@ -2,6 +2,7 @@
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using PromptForge.Core;
 using PromptForge.Core.Model;
 using ObjectType = PromptForge.Core.Model.ObjectType;
 
@@ -10,8 +11,10 @@ namespace PromptForge.Compilation;
 public partial class PromptCompiler : IPromptCompiler
 {
     private static readonly Regex placeholderRegex = PlaceHolderRegex();
+    
+    private ISerializer _serializer = new Serializer([], []);
 
-    public IFillable<T> Compile<T>(PromptContract contract)
+    public IPromptTemplate<T> Compile<T>(PromptContract contract)
     {
         var parts = new List<Func<T, string>>();
         var staticParts = new List<string>();
@@ -56,10 +59,15 @@ public partial class PromptCompiler : IPromptCompiler
 
         return staticParts.Count != parts.Count + 1
             ? throw new InvalidOperationException("Internal error: segment count mismatch.")
-            : new Fillable<T>(staticParts, parts);
+            : new PromptTemplate<T>(staticParts, parts);
     }
 
-    private static Func<T, string> BuildValueGetter<T>(string fieldName)
+    public void SetSerialization(ISerializer serializer)
+    {
+        _serializer = serializer;
+    }
+
+    private Func<T, string> BuildValueGetter<T>(string fieldName)
     {
         var property = typeof(T).GetProperty(fieldName,
             BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
@@ -197,13 +205,13 @@ public partial class PromptCompiler : IPromptCompiler
     private static partial Regex PlaceHolderRegex();
 }
 
-internal class Fillable<T>(List<string> staticParts, List<Func<T, string>> valueGetters)
-    : IFillable<T>
+internal class PromptTemplate<T>(List<string> staticParts, List<Func<T, string>> valueGetters)
+    : IPromptTemplate<T>
 {
     private readonly string[] _staticParts = staticParts.ToArray();
     private readonly Func<T, string>[] _valueGetters = valueGetters.ToArray();
 
-    public string Fill(T data)
+    public string Resolve(T data)
     {
         var sb = new StringBuilder();
         for (var i = 0; i < _valueGetters.Length; i++)

@@ -11,9 +11,9 @@ public class Program
     public static void Main(string[] args)
     {
         _ = args;
-        
+
         var compiler = new PromptCompiler();
-        var builder = new PromptBuilder(compiler)
+        var builder = new PromptBuilder<EvaluationInput, string[]>(compiler)
             .WithTemplate(
                 """
                 Determine which conditions are satisfied. You will be given:
@@ -24,21 +24,30 @@ public class Program
 
                 Output as follows:
                 {{schema:output}}
+                
+                Conditions:
+                {{Conditions}}
+                BufferStates:
+                {{BufferStates}}
                 """)
-            .WithInput<EvaluationInput>()
-            .WithOutput<string[]>()
             .WithType<StructData>(type => type
                 .WithSerialization(
-                    data => JsonSerializer.Serialize(data.Data),
+                    (data, _) => JsonSerializer.Serialize(data.Data),
                     "JSON string")
             )
-            .WithType<BufferOperation>(type => type
-                .ForProperty(op => op.Params, prop =>
-                    prop.WithSerialization(
-                        p => JsonSerializer.Serialize(p.Data),
-                        "JSON matching command schema"))
+            .WithType<string[]>(stringArray => stringArray
+                .WithDeserialization(
+                    (serialized, _) => serialized.Split(',').Select(s => s.Trim()).ToArray(),
+                    "comma separated strings")
             );
 
-        _ = builder.Build<EvaluationInput>();
+        var template = builder.Build();
+        var instance = template.Resolve(new EvaluationInput
+        {
+            BufferStates = [],
+            Conditions = []
+        });
+        
+        Console.WriteLine(instance);
     }
 }

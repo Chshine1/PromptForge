@@ -1,6 +1,11 @@
 ﻿namespace PromptForge.Core.Model;
 
-public record PropertyDefinition(
-    string Name,
-    ITypeDefinition TypeDefinition,
-    PromptHint? Hint = null);
+public class PropertyDefinition(
+    string name,
+    ITypeDefinition typeDefinition,
+    PromptHint? hint = null)
+{
+    public string Name { get; set; } = name;
+    public ITypeDefinition TypeDefinition { get; set; } = typeDefinition;
+    public PromptHint? Hint { get; set; } = hint;
+}
