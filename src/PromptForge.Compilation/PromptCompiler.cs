@@ -135,7 +135,8 @@ public partial class PromptCompiler : IPromptCompiler
         return builder.ToString();
     }
 
-    private static string CompileOutput(string propertyName, ITypeDefinition type, PromptHint? propertyHint = null, int depth = 0)
+    private static string CompileOutput(string propertyName, ITypeDefinition type, PromptHint? propertyHint = null,
+        int depth = 0)
     {
         var builder = new StringBuilder();
 
@@ -143,8 +144,10 @@ public partial class PromptCompiler : IPromptCompiler
 
         var formatHint = propertyHint?.Format != null ? $", format: {propertyHint.Format}" :
             type.Hint?.Format != null ? $", format: {type.Hint.Format}" : "";
-        var constraintHint = type.Hint?.Constraint != null ? $", {type.Hint.Constraint}" : "";
-        
+        var constraintHint = type.Hint?.Constraint != null || propertyHint?.Constraint != null
+            ? $", {MergeConstraints(type.Hint?.Constraint, propertyHint?.Constraint)}"
+            : "";
+
         var typeInfo = $" (a {type.Name}{formatHint}{constraintHint})";
 
         builder.Append(new string(' ', depth * 2));
@@ -177,6 +180,16 @@ public partial class PromptCompiler : IPromptCompiler
         }
 
         return builder.ToString();
+    }
+
+    private static string MergeConstraints(string? c1, string? c2)
+    {
+        if (c1 != null)
+        {
+            return c2 != null ? $"{c1} && {c2}" : c1;
+        }
+
+        return c2 ?? throw new InvalidOperationException();
     }
 
     [GeneratedRegex(@"\{\{(schema:input:(?<property>[A-Za-z]+)|schema:output|(?<value>[A-Za-z]+))\}\}",

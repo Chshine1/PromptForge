@@ -1,30 +1,24 @@
 ﻿using JetBrains.Annotations;
+using PromptForge.Core;
 
 namespace PromptForge.Cli;
 
 [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
-public class BufferState
+[SimpleType]
+[FormatHint(Format = "binary string")]
+public struct Bitmask(long @decimal)
 {
-    public required string Name { get; init; }
-    public required string Data { get; init; }
+    private long _decimal = @decimal;
 }
 
 [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
-public class Condition
+[ObjectType]
+public class ModuleState
 {
-    public required string RuleId { get; init; }
-    public required string Predicate { get; init; }
-}
+    [InputHint(Semantic = "the modules which this state is shared amongst")]
+    public Bitmask StateOf { get; init; }
 
-[UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
-public class ExampleInput
-{
-    public required Dictionary<string, BufferState> BufferStates { get; init; }
-    public required List<Condition> Conditions { get; init; }
-}
+    [PropertyIgnore] public string? InternalId { get; init; }
 
-[UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
-public class ExampleOutput
-{
-    public required List<string> RuleIds { get; init; }
+    public List<string> Tags { get; set; } = [];
 }
