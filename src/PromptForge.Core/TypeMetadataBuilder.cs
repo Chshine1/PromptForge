@@ -72,9 +72,9 @@ public static class TypeMetadataBuilder
                 .Where(p => p.GetCustomAttribute<PropertyIgnoreAttribute>() == null)
                 .Select(p =>
                 {
-                    var propInputHintAttribute = type.GetCustomAttribute<InputHintAttribute>();
-                    var propOutputHintAttribute = type.GetCustomAttribute<OutputHintAttribute>();
-                    var propFormatHintAttribute = type.GetCustomAttribute<FormatHintAttribute>();
+                    var propInputHintAttribute = p.GetCustomAttribute<InputHintAttribute>();
+                    var propOutputHintAttribute = p.GetCustomAttribute<OutputHintAttribute>();
+                    var propFormatHintAttribute = p.GetCustomAttribute<FormatHintAttribute>();
 
                     var propHint = BuildHint(propInputHintAttribute, propOutputHintAttribute, propFormatHintAttribute);
                     var propTypeDef = FromType(p.PropertyType);
