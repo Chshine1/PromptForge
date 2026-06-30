@@ -28,11 +28,8 @@ public static class TypeMetadataBuilder
             type == typeof(Guid))
             return GetSimpleType(type);
 
-        var inputHintAttribute = type.GetCustomAttribute<InputHintAttribute>();
-        var outputHintAttribute = type.GetCustomAttribute<OutputHintAttribute>();
-        var formatHintAttribute = type.GetCustomAttribute<FormatHintAttribute>();
-
-        var hint = BuildHint(inputHintAttribute, outputHintAttribute, formatHintAttribute);
+        var typeHints = HintAttributes.CollectFromType(type);
+        var hint = typeHints.BuildHint(HintTarget.TypeAndProperty);
 
         var interfaces = (type.IsInterface ? type.GetInterfaces().Concat([type]) : type.GetInterfaces())
             .Where(i =>
@@ -52,7 +49,8 @@ public static class TypeMetadataBuilder
             if (args.Length != 2 || args[0] != typeof(string)) throw new InvalidOperationException("");
 
             var valueType = FromType(args[1]);
-            return new MapType(valueType);
+            var valueHint = typeHints.BuildHint(HintTarget.MapValue);
+            return new MapType(valueType, valueHint);
         }
 
         var enumInterface = interfaces.FirstOrDefault(i =>
@@ -61,7 +59,11 @@ public static class TypeMetadataBuilder
         if (enumInterface is not null)
         {
             var args = enumInterface.GetGenericArguments();
-            return args.Length != 1 ? throw new InvalidOperationException() : new ArrayType(FromType(args[0]));
+            if (args.Length != 1) throw new InvalidOperationException();
+
+            var elementType = FromType(args[0]);
+            var elementHint = typeHints.BuildHint(HintTarget.ArrayElement);
+            return new ArrayType(elementType, elementHint);
         }
 
         var objectAttr = type.GetCustomAttribute<ObjectTypeAttribute>();
@@ -69,15 +71,26 @@ public static class TypeMetadataBuilder
         {
             var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Where(p => p.CanRead)
-                .Where(p => p.GetCustomAttribute<PropertyIgnoreAttribute>() == null)
+                .Where(p => p.GetCustomAttribute<PromptIgnoreAttribute>() == null)
                 .Select(p =>
                 {
-                    var propInputHintAttribute = p.GetCustomAttribute<InputHintAttribute>();
-                    var propOutputHintAttribute = p.GetCustomAttribute<OutputHintAttribute>();
-                    var propFormatHintAttribute = p.GetCustomAttribute<FormatHintAttribute>();
-
-                    var propHint = BuildHint(propInputHintAttribute, propOutputHintAttribute, propFormatHintAttribute);
+                    var propHints = HintAttributes.CollectFromMember(p);
+                    var propHint = propHints.BuildHint(HintTarget.TypeAndProperty);
                     var propTypeDef = FromType(p.PropertyType);
+
+                    propTypeDef = propTypeDef switch
+                    {
+                        MapType mapType => mapType with
+                        {
+                            ValueHint = propHints.BuildHint(HintTarget.MapValue)
+                        },
+                        ArrayType arrayType => arrayType with
+                        {
+                            ElementHint = propHints.BuildHint(HintTarget.ArrayElement)
+                        },
+                        _ => propTypeDef
+                    };
+
                     return new PropertyDefinition(p.Name, propTypeDef, propHint);
                 })
                 .ToImmutableArray();
@@ -91,29 +104,50 @@ public static class TypeMetadataBuilder
             : throw new InvalidOperationException();
     }
 
-    private static PromptHint? BuildHint(InputHintAttribute? inputHintAttribute,
-        OutputHintAttribute? outputHintAttribute, FormatHintAttribute? formatHintAttribute)
+    private readonly struct HintAttributes
     {
-        PromptHint? hint = null;
-        if (inputHintAttribute is not null)
+        private readonly ImmutableArray<InputHintAttribute> _inputHints;
+        private readonly ImmutableArray<OutputHintAttribute> _outputHints;
+        private readonly ImmutableArray<FormatHintAttribute> _formatHints;
+
+        private HintAttributes(
+            ImmutableArray<InputHintAttribute> inputHints,
+            ImmutableArray<OutputHintAttribute> outputHints,
+            ImmutableArray<FormatHintAttribute> formatHints)
         {
-            hint = new PromptHint(Semantic: inputHintAttribute.Semantic);
+            _inputHints = inputHints;
+            _outputHints = outputHints;
+            _formatHints = formatHints;
         }
 
-        if (outputHintAttribute is not null)
-        {
-            hint = hint is null
-                ? new PromptHint(Purpose: outputHintAttribute.Purpose, Constraint: outputHintAttribute.Constraint)
-                : hint with { Purpose = outputHintAttribute.Purpose, Constraint = outputHintAttribute.Constraint };
-        }
+        public static HintAttributes CollectFromType(Type type) => new(
+            [..type.GetCustomAttributes<InputHintAttribute>()],
+            [..type.GetCustomAttributes<OutputHintAttribute>()],
+            [..type.GetCustomAttributes<FormatHintAttribute>()]);
 
-        if (formatHintAttribute is not null)
-        {
-            hint = hint is null
-                ? new PromptHint(Format: formatHintAttribute.Format)
-                : hint with { Format = formatHintAttribute.Format };
-        }
+        public static HintAttributes CollectFromMember(MemberInfo member) => new(
+            [..member.GetCustomAttributes<InputHintAttribute>()],
+            [..member.GetCustomAttributes<OutputHintAttribute>()],
+            [..member.GetCustomAttributes<FormatHintAttribute>()]);
 
-        return hint;
+        public PromptHint? BuildHint(HintTarget target)
+        {
+            var input = _inputHints.FirstOrDefault(a => a.Target == target);
+            var output = _outputHints.FirstOrDefault(a => a.Target == target);
+            var format = _formatHints.FirstOrDefault(a => a.Target == target);
+
+            PromptHint? hint = null;
+            if (input is not null)
+                hint = new PromptHint(Semantic: input.Semantic);
+            if (output is not null)
+                hint = hint is null
+                    ? new PromptHint(Purpose: output.Purpose, Constraint: output.Constraint)
+                    : hint with { Purpose = output.Purpose, Constraint = output.Constraint };
+            if (format is not null)
+                hint = hint is null
+                    ? new PromptHint(Format: format.Format)
+                    : hint with { Format = format.Format };
+            return hint;
+        }
     }
 }

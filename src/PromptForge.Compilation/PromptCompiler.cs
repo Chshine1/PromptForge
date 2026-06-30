@@ -112,11 +112,11 @@ public partial class PromptCompiler : IPromptCompiler
         {
             case ArrayType arrayType:
                 builder.Append(
-                    CompileInput("each element", arrayType.ElementType, arrayType.Hint, depth));
+                    CompileInput("each element", arrayType.ElementType, arrayType.ElementHint, depth));
                 break;
             case MapType mapType:
                 builder.Append(
-                    CompileInput("each value", mapType.ValueType, mapType.Hint, depth));
+                    CompileInput("each value", mapType.ValueType, mapType.ValueHint, depth));
                 break;
             case ObjectType objectType:
                 foreach (var property in objectType.Properties)
@@ -159,11 +159,11 @@ public partial class PromptCompiler : IPromptCompiler
         {
             case ArrayType arrayType:
                 builder.Append(
-                    CompileOutput("each element", arrayType.ElementType, arrayType.Hint, depth));
+                    CompileOutput("each element", arrayType.ElementType, arrayType.ElementHint, depth));
                 break;
             case MapType mapType:
                 builder.Append(
-                    CompileOutput("each value", mapType.ValueType, mapType.Hint, depth));
+                    CompileOutput("each value", mapType.ValueType, mapType.ValueHint, depth));
                 break;
             case ObjectType objectType:
                 foreach (var property in objectType.Properties)
