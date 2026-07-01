@@ -11,9 +11,8 @@ public class Program
 {
     public static void Main(string[] args)
     {
-        _ = args;
-
         var compiler = new PromptCompiler(new SerializerFactory());
+        
         var builder = new PromptBuilderFactory(compiler)
             .Create<EvaluationInput, string[]>()
             .WithTemplate(
@@ -26,7 +25,7 @@ public class Program
 
                 Output as follows:
                 {{schema:output}}
-                
+
                 Conditions:
                 {{Conditions}}
                 BufferStates:
@@ -42,14 +41,25 @@ public class Program
                     (serialized, _) => serialized.Split(',').Select(s => s.Trim()).ToArray(),
                     "comma separated strings")
             );
+        var pipeline = builder.Build();
 
-        var template = builder.Build();
-        var instance = template.Resolve(new EvaluationInput
+        Task<string[]?> _ = pipeline.RunAsync(new EvaluationInput
         {
-            BufferStates = [],
+            BufferStates = [
+                new BufferState
+                {
+                    ModuleId = "test_module_1",
+                    Data = new StructData
+                    {
+                        Data = new Dictionary<string, string>
+                        {
+                            ["message"] = "Hello World!"
+                            
+                        }
+                    }
+                }
+            ],
             Conditions = []
         });
-        
-        Console.WriteLine(instance);
     }
 }

@@ -15,7 +15,7 @@ public partial class PromptCompiler(ISerializerFactory serializerFactory) : IPro
 {
     private static readonly Regex placeholderRegex = PlaceHolderRegex();
 
-    public IPromptTemplate<TIn> Compile<TIn, TOut>(string template, IMetadataScope scope)
+    public IPromptPipeline<TIn, TOut> Compile<TIn, TOut>(ILlmInvoker llmInvoker, string template, IMetadataScope scope) where TIn : notnull where TOut : notnull
     {
         var parts = new List<Func<TIn, string>>();
         var staticParts = new List<string>();
@@ -65,7 +65,7 @@ public partial class PromptCompiler(ISerializerFactory serializerFactory) : IPro
 
         return staticParts.Count != parts.Count + 1
             ? throw new InvalidOperationException("Internal error: segment count mismatch.")
-            : new PromptTemplate<TIn>(staticParts, parts);
+            : new PromptPipeline<TIn, TOut>(staticParts, parts, llmInvoker, serializer);
     }
 
     private static Func<T, string> BuildValueGetter<T>(string fieldName, ISerializer serializer)
@@ -222,22 +222,25 @@ public partial class PromptCompiler(ISerializerFactory serializerFactory) : IPro
     private static partial Regex PlaceHolderRegex();
 }
 
-internal class PromptTemplate<T>(List<string> staticParts, List<Func<T, string>> valueGetters)
-    : IPromptTemplate<T>
+internal class PromptPipeline<TIn, TOut>(List<string> staticParts, List<Func<TIn, string>> valueGetters, ILlmInvoker llm, ISerializer serializer)
+    : IPromptPipeline<TIn, TOut> where TIn : notnull where TOut : notnull
 {
     private readonly string[] _staticParts = staticParts.ToArray();
-    private readonly Func<T, string>[] _valueGetters = valueGetters.ToArray();
-
-    public string Resolve(T data)
+    private readonly Func<TIn, string>[] _valueGetters = valueGetters.ToArray();
+    
+    public async Task<TOut?> RunAsync(TIn input, CancellationToken ct = default)
     {
         var sb = new StringBuilder();
         for (var i = 0; i < _valueGetters.Length; i++)
         {
             sb.Append(_staticParts[i]);
-            sb.Append(_valueGetters[i](data));
+            sb.Append(_valueGetters[i](input));
         }
 
         sb.Append(_staticParts[^1]);
-        return sb.ToString();
+        var promptText = sb.ToString();
+        
+        var response = await llm.InvokeAsync(promptText, ct).ConfigureAwait(false);
+        return serializer.Deserialize<TOut>(response);
     }
 }

@@ -4,5 +4,5 @@ namespace PromptForge.Abstractions;
 
 public interface IPromptCompiler
 {
-    IPromptTemplate<TIn> Compile<TIn, TOut>(string template, IMetadataScope scope);
+    IPromptPipeline<TIn, TOut> Compile<TIn, TOut>(ILlmInvoker llmInvoker, string template, IMetadataScope scope) where TIn : notnull where TOut : notnull;
 }

@@ -79,7 +79,7 @@ public class Serializer(ImmutableDictionary<Type, SerializationConfig> configs) 
         return JsonSerializer.Serialize(dict);
     }
 
-    public T? Deserialize<T>(string json) where T : new()
+    public T? Deserialize<T>(string json) where T : notnull
     {
         if (!configs.TryGetValue(typeof(T), out var config)) return JsonSerializer.Deserialize<T>(json);
 
