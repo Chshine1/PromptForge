@@ -9,9 +9,9 @@ public interface IPropertyConfiguration;
 
 [UsedImplicitly(ImplicitUseKindFlags.Access, ImplicitUseTargetFlags.Members)]
 public class PropertyConfiguration<T, TProperty>(string propertyName, IMetadataScopeBuilder scopeBuilder)
-    : IPropertyConfiguration where TProperty : notnull
+    : IPropertyConfiguration where TProperty : notnull, new()
 {
-    public PropertyConfiguration<T, TProperty> WithSerialization(Func<TProperty, ISerializer, string> serializer,
+    public PropertyConfiguration<T, TProperty> WithSerialization(Func<TProperty?, ISerializer, string> serializer,
         string? format = null)
     {
         scopeBuilder.SetPropertySerializer<T, TProperty>(propertyName, serializer);

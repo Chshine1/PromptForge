@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using System.Reflection;
 using PromptForge.Abstractions;
 using PromptForge.Abstractions.Metadata;
 using PromptForge.Abstractions.Model;
@@ -11,7 +12,7 @@ public class MetadataScopeBuilder(IEnumerable<Type> scopeTypes) : IMetadataScope
     private readonly ImmutableDictionary<Type, ITypeDefinition> _typeDefinitions = scopeTypes
         .Select(t => new KeyValuePair<Type, ITypeDefinition>(t, TypeMetadataRegistry.GetDefinitionFromClrType(t)))
         .ToImmutableDictionary();
-    
+
     private readonly Dictionary<Type, TypeOverride> _typeOverrides = new();
     private readonly Dictionary<Type, SerializationConfig> _serializationConfigs = new();
 
@@ -39,7 +40,8 @@ public class MetadataScopeBuilder(IEnumerable<Type> scopeTypes) : IMetadataScope
         config.TypeDeserializer = (str, s) => deserializer(str, s);
     }
 
-    public void SetPropertySerializer<T, TProperty>(string propertyName, Func<TProperty, ISerializer, string> serializer)
+    public void SetPropertySerializer<T, TProperty>(string propertyName,
+        Func<TProperty?, ISerializer, string> serializer) where TProperty : notnull, new()
     {
         var config = _serializationConfigs.GetValueOrDefault(typeof(T));
         if (config == null)
@@ -48,10 +50,11 @@ public class MetadataScopeBuilder(IEnumerable<Type> scopeTypes) : IMetadataScope
             _serializationConfigs[typeof(T)] = config;
         }
 
-        config.PropertySerializers[propertyName] = (o, s) => serializer((TProperty)o, s);
+        config.PropertySerializers[propertyName] = (o, s) => serializer((TProperty?)o, s);
     }
 
-    public void SetPropertyDeserializer<T, TProperty>(string propertyName, Func<string, ISerializer, TProperty> deserializer) where TProperty : notnull
+    public void SetPropertyDeserializer<T, TProperty>(string propertyName,
+        Func<string, ISerializer, TProperty?> deserializer) where TProperty : notnull, new()
     {
         var config = _serializationConfigs.GetValueOrDefault(typeof(T));
         if (config == null)
@@ -100,9 +103,22 @@ public class MetadataScopeBuilder(IEnumerable<Type> scopeTypes) : IMetadataScope
                 _serializationConfigs,
                 kvp => kvp.Key,
                 kvp => kvp.Key,
-                (kvp1, kvp2) => 
-                    new KeyValuePair<Type,TypeMetadata>(kvp1.Key, new TypeMetadata(kvp1.Value, kvp2.Value))
-                )
+                (kvp1, kvp2) =>
+                {
+                    if (kvp1.Value is ObjectType objectType)
+                    {
+                        kvp2.Value.IgnoredProperties.AddRange(kvp2.Key
+                            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                            .Select(p => p.Name)
+                            .ExceptBy(
+                                objectType.Properties.Select(p => p.Name),
+                                p => p
+                            )
+                        );
+                    }
+                    return new KeyValuePair<Type, TypeMetadata>(kvp1.Key, new TypeMetadata(kvp1.Value, kvp2.Value));
+                }
+            )
             .ToImmutableDictionary());
     }
 }

@@ -27,20 +27,20 @@ public class TypeConfiguration<T>(IMetadataScopeBuilder scopeBuilder) : ITypeCon
         return this;
     }
 
-    public TypeConfiguration<T> ForProperty<TProp>(
-        Expression<Func<T, TProp>> selector,
-        Action<PropertyConfiguration<T, TProp>> configure) where TProp : notnull
+    public TypeConfiguration<T> ForProperty<TProperty>(
+        Expression<Func<T, TProperty>> selector,
+        Action<PropertyConfiguration<T, TProperty>> configure) where TProperty : notnull, new()
     {
         if (selector is not MemberExpression memberSelector) throw new ArgumentException("", nameof(selector));
 
-        PropertyConfiguration<T, TProp> typedConfig;
+        PropertyConfiguration<T, TProperty> typedConfig;
         if (_properties.TryGetValue(memberSelector.Member.Name, out var config))
         {
-            typedConfig = (PropertyConfiguration<T, TProp>)config;
+            typedConfig = (PropertyConfiguration<T, TProperty>)config;
         }
         else
         {
-            typedConfig = new PropertyConfiguration<T, TProp>(memberSelector.Member.Name, scopeBuilder);
+            typedConfig = new PropertyConfiguration<T, TProperty>(memberSelector.Member.Name, scopeBuilder);
             _properties.Add(memberSelector.Member.Name, typedConfig);
         }
 

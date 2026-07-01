@@ -1,29 +1,16 @@
 ﻿using System.Reflection;
 using System.Text.Json;
 using PromptForge.Abstractions;
+using PromptForge.Abstractions.Metadata;
 
 namespace PromptForge.Core;
 
-public class SerializeConfiguration
-{
-    public IEnumerable<string> IgnoredProperties { get; init; } = [];
-    public Func<object, ISerializer, string>? TypeSerializer { get; init; }
-    public Dictionary<string, Func<object, ISerializer, string>> PropertySerializers { get; init; } = [];
-}
-
-public class DeserializeConfiguration
-{
-    public Func<string, ISerializer, object?>? TypeDeserializer { get; init; }
-    public Dictionary<string, Func<string, ISerializer, object?>> PropertyDeserializers { get; init; } = [];
-}
-
-public class Serializer(
-    Dictionary<Type, SerializeConfiguration> serializers,
-    Dictionary<Type, DeserializeConfiguration> deserializers) : ISerializer
+public class Serializer(Dictionary<Type, SerializationConfig> configs) : ISerializer
 {
     public string Serialize<T>(T value) where T : notnull
     {
-        if (!serializers.TryGetValue(typeof(T), out var config)) return JsonSerializer.Serialize(value);
+        if (!configs.TryGetValue(typeof(T), out var config)) return JsonSerializer.Serialize(value);
+
         if (config.TypeSerializer != null) return config.TypeSerializer(value, this);
 
         var dict = new Dictionary<string, object?>();
@@ -39,7 +26,7 @@ public class Serializer(
         {
             var propValue = prop.GetValue(value);
 
-            if (config.PropertySerializers.TryGetValue(prop.Name, out var propertySerializer))
+            if (propValue is not null && config.PropertySerializers.TryGetValue(prop.Name, out var propertySerializer))
             {
                 dict[prop.Name] = propertySerializer(propValue, this);
             }
@@ -52,13 +39,11 @@ public class Serializer(
         return JsonSerializer.Serialize(dict);
     }
 
-    public T Deserialize<T>(string json) where T : new()
+    public T? Deserialize<T>(string json) where T : new()
     {
-        if (!deserializers.TryGetValue(typeof(T), out var config))
-            return JsonSerializer.Deserialize<T>(json)!;
+        if (!configs.TryGetValue(typeof(T), out var config)) return JsonSerializer.Deserialize<T>(json);
 
-        if (config.TypeDeserializer != null)
-            return (T)config.TypeDeserializer(json, this);
+        if (config.TypeDeserializer != null) return (T)config.TypeDeserializer(json, this);
 
         using var document = JsonDocument.Parse(json);
         var root = document.RootElement;
@@ -68,17 +53,13 @@ public class Serializer(
 
         var obj = Activator.CreateInstance<T>();
 
-        var properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
+        var properties = typeof(T)
+            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
             .Where(p => p.CanWrite);
-
-        JsonNamingPolicy? namingPolicy = null;
 
         foreach (var prop in properties)
         {
-            var jsonPropName = namingPolicy?.ConvertName(prop.Name) ?? prop.Name;
-
-            if (!root.TryGetProperty(jsonPropName, out var jsonElement))
-                continue;
+            if (!root.TryGetProperty(prop.Name, out var jsonElement)) continue;
 
             object? value;
             if (config.PropertyDeserializers.TryGetValue(prop.Name, out var propertyDeserializer))
