@@ -2,11 +2,11 @@
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-using PromptForge.Core;
+using PromptForge.Abstractions;
 using PromptForge.Core.Model;
 using ObjectType = PromptForge.Core.Model.ObjectType;
 
-namespace PromptForge.Compilation;
+namespace PromptForge.Core.Compilation;
 
 public partial class PromptCompiler : IPromptCompiler
 {

@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using PromptForge.Abstractions;
 using PromptForge.Core.Model;
 
 namespace PromptForge.Core;

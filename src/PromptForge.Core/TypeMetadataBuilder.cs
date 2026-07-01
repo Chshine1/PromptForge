@@ -1,5 +1,9 @@
 ﻿using System.Collections.Immutable;
 using System.Reflection;
+using PromptForge.Abstractions;
+using PromptForge.Abstractions.Attributes;
+using PromptForge.Abstractions.Attributes.Hints;
+using PromptForge.Abstractions.Attributes.Types;
 using PromptForge.Core.Model;
 
 namespace PromptForge.Core;

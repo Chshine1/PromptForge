@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using System.Text.Json;
+using PromptForge.Abstractions;
 
 namespace PromptForge.Core;
 
@@ -14,12 +15,6 @@ public class DeserializeConfiguration
 {
     public Func<string, ISerializer, object?>? TypeDeserializer { get; init; }
     public Dictionary<string, Func<string, ISerializer, object?>> PropertyDeserializers { get; init; } = [];
-}
-
-public interface ISerializer
-{
-    string Serialize<T>(T value) where T : notnull;
-    T Deserialize<T>(string value) where T : new();
 }
 
 public class Serializer(

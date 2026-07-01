@@ -12,7 +12,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\PromptForge.Compilation\PromptForge.Compilation.csproj" />
+      <ProjectReference Include="..\PromptForge.Core\PromptForge.Core.csproj" />
     </ItemGroup>
 
 </Project>

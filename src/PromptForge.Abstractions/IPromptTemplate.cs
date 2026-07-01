@@ -1,4 +1,4 @@
-﻿namespace PromptForge.Core.Model;
+﻿namespace PromptForge.Abstractions;
 
 public interface IPromptTemplate<in TInput>
 {

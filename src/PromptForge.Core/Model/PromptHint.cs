@@ -1,8 +1,5 @@
 ﻿namespace PromptForge.Core.Model;
 
-/// <summary>
-/// 
-/// </summary>
 /// <param name="semantic">for input: explains how to interpret data</param>
 /// <param name="purpose">for output: explains the role in generation</param>
 /// <param name="constraint">for output: explains the constraint</param>

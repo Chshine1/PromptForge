@@ -4,8 +4,8 @@
     <File Path="README.md" />
   </Folder>
   <Folder Name="/src/">
+    <Project Path="src/PromptForge.Abstractions/PromptForge.Abstractions.csproj" />
     <Project Path="src/PromptForge.Cli/PromptForge.Cli.csproj" />
-    <Project Path="src/PromptForge.Compilation/PromptForge.Compilation.csproj" />
     <Project Path="src/PromptForge.Core/PromptForge.Core.csproj" />
   </Folder>
 </Solution>

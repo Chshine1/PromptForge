@@ -1,4 +1,7 @@
-﻿using PromptForge.Core;
+﻿using PromptForge.Abstractions;
+using PromptForge.Abstractions.Attributes;
+using PromptForge.Abstractions.Attributes.Hints;
+using PromptForge.Abstractions.Attributes.Types;
 
 namespace PromptForge.Cli;
 

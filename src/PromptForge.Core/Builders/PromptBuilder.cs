@@ -1,8 +1,8 @@
-﻿using PromptForge.Compilation;
-using PromptForge.Core;
+﻿using PromptForge.Abstractions;
+using PromptForge.Core.Compilation;
 using PromptForge.Core.Model;
 
-namespace PromptForge.Cli.Builders;
+namespace PromptForge.Core.Builders;
 
 public class PromptBuilder<TInput, TOutput>(IPromptCompiler compiler)
 {
