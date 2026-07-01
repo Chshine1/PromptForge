@@ -6,11 +6,12 @@ using System.Text.RegularExpressions;
 using PromptForge.Abstractions;
 using PromptForge.Abstractions.Metadata;
 using PromptForge.Abstractions.Model;
+using PromptForge.Abstractions.Serialization;
 using ObjectType = PromptForge.Abstractions.Model.ObjectType;
 
 namespace PromptForge.Core;
 
-public partial class PromptCompiler : IPromptCompiler
+public partial class PromptCompiler(ISerializerFactory serializerFactory) : IPromptCompiler
 {
     private static readonly Regex placeholderRegex = PlaceHolderRegex();
 
@@ -25,6 +26,7 @@ public partial class PromptCompiler : IPromptCompiler
         var outputTypeDefinition = GetTypeDefinition(typeof(TOut), scope);
 
         var lastIndex = 0;
+        var serializer = serializerFactory.Create(scope.SerializationConfigs);
         foreach (Match m in placeholderRegex.Matches(template))
         {
             if (m.Index > lastIndex)
@@ -43,7 +45,7 @@ public partial class PromptCompiler : IPromptCompiler
             {
                 // {{FieldName}} - Runtime
                 var fieldName = m.Groups["value"].Value;
-                var valueGetter = BuildValueGetter<TIn>(fieldName);
+                var valueGetter = BuildValueGetter<TIn>(fieldName, serializer);
                 parts.Add(valueGetter);
                 staticParts.Add(string.Empty);
             }
@@ -66,34 +68,26 @@ public partial class PromptCompiler : IPromptCompiler
             : new PromptTemplate<TIn>(staticParts, parts);
     }
 
-    private Func<T, string> BuildValueGetter<T>(string fieldName)
+    private static Func<T, string> BuildValueGetter<T>(string fieldName, ISerializer serializer)
     {
-        var property = typeof(T).GetProperty(fieldName,
+        var prop = typeof(T).GetProperty(fieldName,
             BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
-        if (property == null)
+        if (prop == null)
             throw new ArgumentException($"Property '{fieldName}' not found on type '{typeof(T).Name}'.");
 
         var target = Expression.Parameter(typeof(T), "target");
-        Expression body = Expression.Property(target, property);
+        // ReSharper disable once NullableWarningSuppressionIsUsed
+        var method = typeof(ISerializer).GetMethod(nameof(ISerializer.SerializePropertyValue))!;
+        var serializerExp = Expression.Constant(serializer);
+        var fieldNameExp = Expression.Constant(fieldName);
+        var ownerTypeExp = Expression.Constant(typeof(T));
 
-        if (property.PropertyType != typeof(string))
-        {
-            var toStringMethod = property.PropertyType.GetMethod("ToString", Type.EmptyTypes);
-            // ReSharper disable once NullableWarningSuppressionIsUsed
-            body = Expression.Call(body, toStringMethod != null
-                ? toStringMethod
-                : typeof(Convert).GetMethod("ToString", [typeof(object)])!);
-        }
+        var call = Expression.Call(serializerExp, method,
+            Expression.Convert(target, typeof(object)),
+            fieldNameExp,
+            ownerTypeExp);
 
-        if (!property.PropertyType.IsValueType || Nullable.GetUnderlyingType(property.PropertyType) != null)
-        {
-            var nullExp = Expression.Constant(null, property.PropertyType);
-            var equalsNull = Expression.Equal(body, nullExp);
-            body = Expression.Condition(equalsNull, Expression.Constant(string.Empty), body);
-        }
-
-        var lambda = Expression.Lambda<Func<T, string>>(body, target);
-        return lambda.Compile();
+        return Expression.Lambda<Func<T, string>>(call, target).Compile();
     }
 
     private static string CompileInput(IMetadataScope scope, string propertyName, ITypeDefinition type,
@@ -209,7 +203,7 @@ public partial class PromptCompiler : IPromptCompiler
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ITypeDefinition GetTypeDefinition(Type clrType, IMetadataScope scope)
     {
-        return scope[clrType]?.TypeDefinition ?? throw new IndexOutOfRangeException();
+        return scope[clrType] ?? throw new IndexOutOfRangeException();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

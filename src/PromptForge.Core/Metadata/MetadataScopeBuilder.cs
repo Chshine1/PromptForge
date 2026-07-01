@@ -1,8 +1,8 @@
 ﻿using System.Collections.Immutable;
 using System.Reflection;
-using PromptForge.Abstractions;
 using PromptForge.Abstractions.Metadata;
 using PromptForge.Abstractions.Model;
+using PromptForge.Abstractions.Serialization;
 using PromptForge.Core.Metadata.Registry;
 
 namespace PromptForge.Core.Metadata;

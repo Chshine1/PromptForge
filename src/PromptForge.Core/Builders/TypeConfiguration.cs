@@ -1,8 +1,8 @@
 ﻿using System.Linq.Expressions;
 using JetBrains.Annotations;
-using PromptForge.Abstractions;
 using PromptForge.Abstractions.Metadata;
 using PromptForge.Abstractions.Model;
+using PromptForge.Abstractions.Serialization;
 
 namespace PromptForge.Core.Builders;
 

@@ -1,12 +1,52 @@
-﻿using System.Reflection;
+﻿using System.Collections.Immutable;
+using System.Reflection;
 using System.Text.Json;
-using PromptForge.Abstractions;
-using PromptForge.Abstractions.Metadata;
+using PromptForge.Abstractions.Serialization;
 
-namespace PromptForge.Core;
+namespace PromptForge.Core.Serialization;
 
-public class Serializer(Dictionary<Type, SerializationConfig> configs) : ISerializer
+public class Serializer(ImmutableDictionary<Type, SerializationConfig> configs) : ISerializer
 {
+    public string SerializePropertyValue(object owner, string propertyName, Type ownerType)
+    {
+        var prop = ownerType.GetProperty(propertyName,
+            BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+        if (prop is null)
+            throw new ArgumentException($"Property '{propertyName}' not found on type '{ownerType.Name}'.");
+
+        var value = prop.GetValue(owner);
+
+        if (configs.TryGetValue(ownerType, out var ownerConfig) &&
+            ownerConfig.PropertySerializers.TryGetValue(propertyName, out var propSerializer))
+        {
+            value = propSerializer(value, this);
+        }
+
+        return ConvertToTemplateString(value, prop.PropertyType);
+    }
+
+    private string ConvertToTemplateString(object? value, Type valueType)
+    {
+        if (value == null)
+            return string.Empty;
+
+        if (configs.TryGetValue(valueType, out var valueConfig) && valueConfig.TypeSerializer != null)
+            return valueConfig.TypeSerializer(value, this);
+
+        if (value is string s)
+            return s;
+
+        var json = JsonSerializer.Serialize(value, valueType);
+        if (valueType == typeof(string) || valueType == typeof(char))
+        {
+            return json is ['"', _, ..] && json[^1] == '"'
+                ? json[1..^1]
+                : json;
+        }
+
+        return json;
+    }
+
     public string Serialize<T>(T value) where T : notnull
     {
         if (!configs.TryGetValue(typeof(T), out var config)) return JsonSerializer.Serialize(value);

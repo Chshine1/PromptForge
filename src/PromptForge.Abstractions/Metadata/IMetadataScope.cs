@@ -1,10 +1,11 @@
-﻿using PromptForge.Abstractions.Model;
+﻿using System.Collections.Immutable;
+using PromptForge.Abstractions.Model;
+using PromptForge.Abstractions.Serialization;
 
 namespace PromptForge.Abstractions.Metadata;
 
-public readonly record struct TypeMetadata(ITypeDefinition TypeDefinition, SerializationConfig Config);
-
 public interface IMetadataScope
 {
-    TypeMetadata? this[Type type] { get; }
+    ITypeDefinition? this[Type type] { get; }
+    ImmutableDictionary<Type, SerializationConfig> SerializationConfigs { get; }
 }
