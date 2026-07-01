@@ -3,10 +3,10 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using PromptForge.Abstractions;
-using PromptForge.Core.Model;
-using ObjectType = PromptForge.Core.Model.ObjectType;
+using PromptForge.Abstractions.Model;
+using ObjectType = PromptForge.Abstractions.Model.ObjectType;
 
-namespace PromptForge.Core.Compilation;
+namespace PromptForge.Core;
 
 public partial class PromptCompiler : IPromptCompiler
 {

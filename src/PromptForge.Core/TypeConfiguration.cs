@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
 using PromptForge.Abstractions;
-using PromptForge.Core.Model;
+using PromptForge.Abstractions.Model;
 
 namespace PromptForge.Core;
 

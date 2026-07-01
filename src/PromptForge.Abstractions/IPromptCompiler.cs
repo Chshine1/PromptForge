@@ -1,7 +1,6 @@
-﻿using PromptForge.Abstractions;
-using PromptForge.Core.Model;
+﻿using PromptForge.Abstractions.Model;
 
-namespace PromptForge.Core.Compilation;
+namespace PromptForge.Abstractions;
 
 public interface IPromptCompiler
 {

@@ -4,7 +4,7 @@ using PromptForge.Abstractions;
 using PromptForge.Abstractions.Attributes;
 using PromptForge.Abstractions.Attributes.Hints;
 using PromptForge.Abstractions.Attributes.Types;
-using PromptForge.Core.Model;
+using PromptForge.Abstractions.Model;
 
 namespace PromptForge.Core;
 

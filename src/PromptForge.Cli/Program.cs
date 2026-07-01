@@ -1,7 +1,6 @@
 ﻿using System.Text.Json;
 using JetBrains.Annotations;
-using PromptForge.Core.Builders;
-using PromptForge.Core.Compilation;
+using PromptForge.Core;
 
 namespace PromptForge.Cli;
 

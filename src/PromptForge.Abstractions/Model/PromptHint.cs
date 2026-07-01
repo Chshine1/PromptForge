@@ -1,4 +1,4 @@
-﻿namespace PromptForge.Core.Model;
+﻿namespace PromptForge.Abstractions.Model;
 
 /// <param name="semantic">for input: explains how to interpret data</param>
 /// <param name="purpose">for output: explains the role in generation</param>

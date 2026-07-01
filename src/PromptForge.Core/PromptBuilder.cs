@@ -1,8 +1,7 @@
 ﻿using PromptForge.Abstractions;
-using PromptForge.Core.Compilation;
-using PromptForge.Core.Model;
+using PromptForge.Abstractions.Model;
 
-namespace PromptForge.Core.Builders;
+namespace PromptForge.Core;
 
 public class PromptBuilder<TInput, TOutput>(IPromptCompiler compiler)
 {

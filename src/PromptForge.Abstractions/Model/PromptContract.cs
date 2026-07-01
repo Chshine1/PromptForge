@@ -1,4 +1,4 @@
-﻿namespace PromptForge.Core.Model;
+﻿namespace PromptForge.Abstractions.Model;
 
 public record PromptContract(
     string PromptTemplate,
