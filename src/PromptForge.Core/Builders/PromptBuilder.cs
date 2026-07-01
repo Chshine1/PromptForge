@@ -1,6 +1,7 @@
 ﻿using PromptForge.Abstractions;
 using PromptForge.Abstractions.Metadata;
 using PromptForge.Core.Metadata;
+using PromptForge.Core.Metadata.Registry;
 
 namespace PromptForge.Core.Builders;
 
@@ -8,12 +9,12 @@ public class PromptBuilderFactory(IPromptCompiler compiler)
 {
     public PromptBuilder<TInput, TOutput> Create<TInput, TOutput>()
     {
-        TypeMetadataBuilder.RegisterClrType(typeof(TInput));
-        TypeMetadataBuilder.RegisterClrType(typeof(TOutput));
+        TypeMetadataRegistry.RegisterClrType(typeof(TInput));
+        TypeMetadataRegistry.RegisterClrType(typeof(TOutput));
 
         var scopeBuilder = new MetadataScopeBuilder(
-            TypeMetadataBuilder.RegisterClrType(typeof(TInput)).TypeOccurrences
-                .Concat(TypeMetadataBuilder.RegisterClrType(typeof(TOutput)).TypeOccurrences)
+            TypeMetadataRegistry.RegisterClrType(typeof(TInput)).TypeOccurrences
+                .Concat(TypeMetadataRegistry.RegisterClrType(typeof(TOutput)).TypeOccurrences)
         );
         return new PromptBuilder<TInput, TOutput>(compiler, scopeBuilder);
     }

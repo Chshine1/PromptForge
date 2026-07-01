@@ -2,13 +2,14 @@
 using PromptForge.Abstractions;
 using PromptForge.Abstractions.Metadata;
 using PromptForge.Abstractions.Model;
+using PromptForge.Core.Metadata.Registry;
 
 namespace PromptForge.Core.Metadata;
 
 public class MetadataScopeBuilder(IEnumerable<Type> scopeTypes) : IMetadataScopeBuilder
 {
     private readonly ImmutableDictionary<Type, ITypeDefinition> _typeDefinitions = scopeTypes
-        .Select(t => new KeyValuePair<Type, ITypeDefinition>(t, TypeMetadataBuilder.GetDefinitionFromClrType(t)))
+        .Select(t => new KeyValuePair<Type, ITypeDefinition>(t, TypeMetadataRegistry.GetDefinitionFromClrType(t)))
         .ToImmutableDictionary();
     
     private readonly Dictionary<Type, TypeOverride> _typeOverrides = new();
