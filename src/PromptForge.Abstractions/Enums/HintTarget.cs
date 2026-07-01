@@ -1,4 +1,4 @@
-﻿namespace PromptForge.Abstractions;
+﻿namespace PromptForge.Abstractions.Enums;
 
 public enum HintTarget
 {

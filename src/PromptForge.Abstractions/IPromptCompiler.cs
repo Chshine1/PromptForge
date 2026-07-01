@@ -1,4 +1,4 @@
-﻿using PromptForge.Abstractions.Model;
+﻿using PromptForge.Abstractions.Metadata;
 
 namespace PromptForge.Abstractions;
 

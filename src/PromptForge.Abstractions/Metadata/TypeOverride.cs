@@ -1,15 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using PromptForge.Abstractions.Model;
 
-namespace PromptForge.Abstractions;
-
-public record PropertyOverride(PromptHint? Hint)
-{
-    public PropertyOverride WithOther(PropertyOverride? other)
-    {
-        return other is null ? this : new PropertyOverride(Hint is not null ? Hint.WithOther(other.Hint) : other.Hint);
-    }
-};
+namespace PromptForge.Abstractions.Metadata;
 
 public record TypeOverride(
     PromptHint? Hint = null,
@@ -61,16 +53,4 @@ public record TypeOverride(
                 MapValueHint: MapValueHint is not null ? MapValueHint.WithOther(other.MapValueHint) : other.MapValueHint
             );
     }
-};
-
-public interface IMetadataScope
-{
-    ITypeDefinition? this[Type type] { get; }
-}
-
-public interface IMetadataScopeBuilder
-{
-    void OverrideType(Type type, TypeOverride newTypeOverride);
-    void OverrideProperty(Type type, string propertyName, PropertyOverride newPropertyOverride);
-    IMetadataScope Build();
 }

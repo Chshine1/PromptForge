@@ -1,10 +1,9 @@
 ﻿using System.Collections.Immutable;
-using PromptForge.Abstractions;
-using PromptForge.Abstractions.Model;
+using PromptForge.Abstractions.Metadata;
 
 namespace PromptForge.Core.Metadata;
 
-public class MetadataScope(ImmutableDictionary<Type, ITypeDefinition> typeDefinitions) : IMetadataScope
+public class MetadataScope(ImmutableDictionary<Type, TypeMetadata> typeDefinitions) : IMetadataScope
 {
-    public ITypeDefinition? this[Type type] => typeDefinitions.GetValueOrDefault(type);
+    public TypeMetadata? this[Type type] => typeDefinitions.GetValueOrDefault(type);
 }

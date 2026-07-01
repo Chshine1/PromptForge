@@ -1,7 +1,8 @@
 ﻿using PromptForge.Abstractions;
+using PromptForge.Abstractions.Metadata;
 using PromptForge.Core.Metadata;
 
-namespace PromptForge.Core;
+namespace PromptForge.Core.Builders;
 
 public class PromptBuilderFactory(IPromptCompiler compiler)
 {
@@ -29,7 +30,7 @@ public class PromptBuilder<TInput, TOutput>(IPromptCompiler compiler, IMetadataS
         return this;
     }
 
-    public PromptBuilder<TInput, TOutput> WithType<T>(Action<TypeConfiguration<T>> configure)
+    public PromptBuilder<TInput, TOutput> WithType<T>(Action<TypeConfiguration<T>> configure) where T : notnull
     {
         TypeConfiguration<T> typedConfig;
 

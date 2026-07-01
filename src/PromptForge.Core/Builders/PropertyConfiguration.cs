@@ -1,0 +1,31 @@
+﻿using JetBrains.Annotations;
+using PromptForge.Abstractions;
+using PromptForge.Abstractions.Metadata;
+using PromptForge.Abstractions.Model;
+
+namespace PromptForge.Core.Builders;
+
+public interface IPropertyConfiguration;
+
+[UsedImplicitly(ImplicitUseKindFlags.Access, ImplicitUseTargetFlags.Members)]
+public class PropertyConfiguration<T, TProperty>(string propertyName, IMetadataScopeBuilder scopeBuilder)
+    : IPropertyConfiguration where TProperty : notnull
+{
+    public PropertyConfiguration<T, TProperty> WithSerialization(Func<TProperty, ISerializer, string> serializer,
+        string? format = null)
+    {
+        scopeBuilder.SetPropertySerializer<T, TProperty>(propertyName, serializer);
+        scopeBuilder.OverrideProperty(typeof(T), propertyName,
+            new PropertyOverride(Hint: new PromptHint(Format: format)));
+        return this;
+    }
+
+    public PropertyConfiguration<T, TProperty> WithDeserialization(Func<string, ISerializer, TProperty> deserializer,
+        string? format = null)
+    {
+        scopeBuilder.SetPropertyDeserializer<T, TProperty>(propertyName, deserializer);
+        scopeBuilder.OverrideProperty(typeof(T), propertyName,
+            new PropertyOverride(Hint: new PromptHint(Format: format)));
+        return this;
+    }
+}

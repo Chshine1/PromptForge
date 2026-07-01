@@ -1,4 +1,5 @@
 ﻿using JetBrains.Annotations;
+using PromptForge.Abstractions.Enums;
 
 namespace PromptForge.Abstractions.Attributes.Hints;
 

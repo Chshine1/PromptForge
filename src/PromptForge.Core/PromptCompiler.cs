@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using PromptForge.Abstractions;
+using PromptForge.Abstractions.Metadata;
 using PromptForge.Abstractions.Model;
 using ObjectType = PromptForge.Abstractions.Model.ObjectType;
 
@@ -208,7 +209,7 @@ public partial class PromptCompiler : IPromptCompiler
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ITypeDefinition GetTypeDefinition(Type clrType, IMetadataScope scope)
     {
-        return scope[clrType] ?? throw new IndexOutOfRangeException();
+        return scope[clrType]?.TypeDefinition ?? throw new IndexOutOfRangeException();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
