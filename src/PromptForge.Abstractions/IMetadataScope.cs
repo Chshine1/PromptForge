@@ -11,7 +11,11 @@ public record PropertyOverride(PromptHint? Hint)
     }
 };
 
-public record TypeOverride(Dictionary<string, PropertyOverride>? Properties = null, PromptHint? Hint = null)
+public record TypeOverride(
+    PromptHint? Hint = null,
+    Dictionary<string, PropertyOverride>? Properties = null,
+    PromptHint? ArrayElementHint = null,
+    PromptHint? MapValueHint = null)
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Dictionary<string, PropertyOverride> MergeProperties(Dictionary<string, PropertyOverride> properties,
@@ -49,8 +53,12 @@ public record TypeOverride(Dictionary<string, PropertyOverride>? Properties = nu
         return other is null
             ? this
             : new TypeOverride(
+                Hint: Hint is not null ? Hint.WithOther(other.Hint) : other.Hint,
                 Properties: mergedProperties,
-                Hint: Hint is not null ? Hint.WithOther(other.Hint) : other.Hint
+                ArrayElementHint: ArrayElementHint is not null
+                    ? ArrayElementHint.WithOther(other.ArrayElementHint)
+                    : other.ArrayElementHint,
+                MapValueHint: MapValueHint is not null ? MapValueHint.WithOther(other.MapValueHint) : other.MapValueHint
             );
     }
 };

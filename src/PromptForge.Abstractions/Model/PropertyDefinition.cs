@@ -1,11 +1,12 @@
 ﻿namespace PromptForge.Abstractions.Model;
 
-public class PropertyDefinition(
-    string name,
-    Type typeDefinition,
-    PromptHint? hint = null)
+public record PropertyDefinition(
+    string Name,
+    Type TypeDefinition,
+    PromptHint? Hint = null)
 {
-    public string Name { get; set; } = name;
-    public Type TypeDefinition { get; set; } = typeDefinition;
-    public PromptHint? Hint { get; set; } = hint;
+    public PropertyDefinition OverrideWith(PropertyOverride @override)
+    {
+        return this with { Hint = Hint is not null ? Hint.WithOther(@override.Hint) : @override.Hint };
+    }
 }

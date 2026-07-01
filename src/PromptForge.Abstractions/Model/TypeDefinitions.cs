@@ -21,8 +21,11 @@ public record ObjectType(Type ClrType, string Name, IEnumerable<PropertyDefiniti
 {
     public ITypeDefinition OverrideWith(TypeOverride @override)
     {
-        // TODO
-        return this with { Hint = Hint is not null ? Hint.WithOther(@override.Hint) : @override.Hint };
+        return this with
+        {
+            Properties = Properties.Select(p => @override.Properties?.TryGetValue(p.Name, out var propertyOverride) is true ? p.OverrideWith(propertyOverride) : p),
+            Hint = Hint is not null ? Hint.WithOther(@override.Hint) : @override.Hint
+        };
     }
 }
 
@@ -35,7 +38,11 @@ public record ArrayType(
     public string Name => "Array";
     public ITypeDefinition OverrideWith(TypeOverride @override)
     {
-        throw new NotImplementedException();
+        return this with
+        {
+            Hint = Hint is not null ? Hint.WithOther(@override.Hint) : @override.Hint,
+            ElementHint = ElementHint is not null ? ElementHint.WithOther(@override.ArrayElementHint) : @override.ArrayElementHint
+        };
     }
 }
 
@@ -45,6 +52,10 @@ public record MapType(Type ClrType, Type ValueType, PromptHint? Hint = null, Pro
     public string Name => "Map";
     public ITypeDefinition OverrideWith(TypeOverride @override)
     {
-        throw new NotImplementedException();
+        return this with
+        {
+            Hint = Hint is not null ? Hint.WithOther(@override.Hint) : @override.Hint,
+            ValueHint = ValueHint is not null ? ValueHint.WithOther(@override.ArrayElementHint) : @override.ArrayElementHint
+        };
     }
 }
