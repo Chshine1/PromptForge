@@ -6,14 +6,12 @@ namespace PromptForge.Core;
 
 public interface ITypeConfiguration
 {
-    Type ClrType { get; }
     SerializeConfiguration? GetSerializeConfiguration();
     DeserializeConfiguration? GetDeserializeConfiguration();
 }
 
 public class TypeConfiguration<T>(IMetadataScopeBuilder scopeBuilder) : ITypeConfiguration
 {
-    public Type ClrType { get; } = typeof(T);
     private Func<object, ISerializer, string>? _serializer;
     private Func<string, ISerializer, object?>? _deserializer;
     private readonly Dictionary<string, IPropertyConfiguration> _properties = [];
@@ -86,7 +84,6 @@ public class TypeConfiguration<T>(IMetadataScopeBuilder scopeBuilder) : ITypeCon
 
 public interface IPropertyConfiguration
 {
-    MemberExpression Property { get; }
     Func<object, ISerializer, string>? Serializer { get; }
     Func<string, ISerializer, object?>? Deserializer { get; }
 }
@@ -94,7 +91,6 @@ public interface IPropertyConfiguration
 public class PropertyConfiguration<TProperty>(MemberExpression property, IMetadataScopeBuilder scopeBuilder)
     : IPropertyConfiguration
 {
-    public MemberExpression Property { get; } = property;
     public Func<object, ISerializer, string>? Serializer { get; private set; }
     public Func<string, ISerializer, object?>? Deserializer { get; private set; }
 
@@ -102,7 +98,7 @@ public class PropertyConfiguration<TProperty>(MemberExpression property, IMetada
         string? format = null)
     {
         Serializer = (o, s) => serializer((TProperty)o, s);
-        scopeBuilder.OverrideProperty(Property.Type, Property.Member.Name,
+        scopeBuilder.OverrideProperty(property.Type, property.Member.Name,
             new PropertyOverride(Hint: new PromptHint(Format: format)));
         return this;
     }
@@ -111,7 +107,7 @@ public class PropertyConfiguration<TProperty>(MemberExpression property, IMetada
         string? format = null)
     {
         Deserializer = (str, s) => deserializer(str, s);
-        scopeBuilder.OverrideProperty(Property.Type, Property.Member.Name,
+        scopeBuilder.OverrideProperty(property.Type, property.Member.Name,
             new PropertyOverride(Hint: new PromptHint(Format: format)));
         return this;
     }

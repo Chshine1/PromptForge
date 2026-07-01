@@ -1,18 +1,27 @@
 ﻿using PromptForge.Abstractions;
-using PromptForge.Abstractions.Model;
 using PromptForge.Core.Metadata;
 
 namespace PromptForge.Core;
 
-public class PromptBuilder<TInput, TOutput>(IPromptCompiler compiler)
+public class PromptBuilderFactory(IPromptCompiler compiler)
+{
+    public PromptBuilder<TInput, TOutput> Create<TInput, TOutput>()
+    {
+        TypeMetadataBuilder.RegisterClrType(typeof(TInput));
+        TypeMetadataBuilder.RegisterClrType(typeof(TOutput));
+
+        var scopeBuilder = new MetadataScopeBuilder(
+            TypeMetadataBuilder.RegisterClrType(typeof(TInput)).TypeOccurrences
+                .Concat(TypeMetadataBuilder.RegisterClrType(typeof(TOutput)).TypeOccurrences)
+        );
+        return new PromptBuilder<TInput, TOutput>(compiler, scopeBuilder);
+    }
+}
+
+public class PromptBuilder<TInput, TOutput>(IPromptCompiler compiler, IMetadataScopeBuilder scopeBuilder)
 {
     private string? _template;
     private readonly Dictionary<Type, ITypeConfiguration> _types = [];
-
-    private readonly IMetadataScopeBuilder _scopeBuilder = new MetadataScopeBuilder(
-        TypeMetadataBuilder.RegisterClrType(typeof(TInput)).TypeOccurrences
-            .Concat(TypeMetadataBuilder.RegisterClrType(typeof(TOutput)).TypeOccurrences)
-    );
 
     public PromptBuilder<TInput, TOutput> WithTemplate(string template)
     {
@@ -30,7 +39,7 @@ public class PromptBuilder<TInput, TOutput>(IPromptCompiler compiler)
         }
         else
         {
-            typedConfig = new TypeConfiguration<T>(_scopeBuilder);
+            typedConfig = new TypeConfiguration<T>(scopeBuilder);
             _types.Add(typeof(T), typedConfig);
         }
 
@@ -40,16 +49,8 @@ public class PromptBuilder<TInput, TOutput>(IPromptCompiler compiler)
 
     public IPromptTemplate<TInput> Build()
     {
-        if (_template == null) throw new InvalidOperationException("Template not set.");
-
-        var inputDef = TypeMetadataBuilder.RegisterClrType(typeof(TInput));
-        var outputDef = TypeMetadataBuilder.RegisterClrType(typeof(TOutput));
-
-        if (inputDef.Type is not ObjectType objInputDef)
-            throw new InvalidOperationException("Input type not supported.");
-
-        var contract = new PromptContract(_template, objInputDef, outputDef.Type);
-
-        return compiler.Compile<TInput>(contract, _scopeBuilder.Build());
+        return _template != null
+            ? compiler.Compile<TInput, TOutput>(_template, scopeBuilder.Build())
+            : throw new InvalidOperationException("Template not set.");
     }
 }

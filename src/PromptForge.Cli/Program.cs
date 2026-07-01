@@ -12,7 +12,8 @@ public class Program
         _ = args;
 
         var compiler = new PromptCompiler();
-        var builder = new PromptBuilder<EvaluationInput, string[]>(compiler)
+        var builder = new PromptBuilderFactory(compiler)
+            .Create<EvaluationInput, string[]>()
             .WithTemplate(
                 """
                 Determine which conditions are satisfied. You will be given:

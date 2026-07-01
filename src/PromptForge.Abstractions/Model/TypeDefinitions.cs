@@ -2,13 +2,12 @@
 
 public interface ITypeDefinition
 {
-    Type ClrType { get; }
     string Name { get; }
     PromptHint? Hint { get; }
     public ITypeDefinition OverrideWith(TypeOverride @override);
 }
 
-public record SimpleType(Type ClrType, string Name, PromptHint? Hint = null) : ITypeDefinition
+public record SimpleType(string Name, PromptHint? Hint = null) : ITypeDefinition
 {
     public ITypeDefinition OverrideWith(TypeOverride @override)
     {
@@ -16,7 +15,7 @@ public record SimpleType(Type ClrType, string Name, PromptHint? Hint = null) : I
     }
 }
 
-public record ObjectType(Type ClrType, string Name, IEnumerable<PropertyDefinition> Properties, PromptHint? Hint = null)
+public record ObjectType(string Name, IEnumerable<PropertyDefinition> Properties, PromptHint? Hint = null)
     : ITypeDefinition
 {
     public ITypeDefinition OverrideWith(TypeOverride @override)
@@ -30,7 +29,6 @@ public record ObjectType(Type ClrType, string Name, IEnumerable<PropertyDefiniti
 }
 
 public record ArrayType(
-    Type ClrType,
     Type ElementType,
     PromptHint? Hint = null,
     PromptHint? ElementHint = null) : ITypeDefinition
@@ -46,7 +44,7 @@ public record ArrayType(
     }
 }
 
-public record MapType(Type ClrType, Type ValueType, PromptHint? Hint = null, PromptHint? ValueHint = null)
+public record MapType(Type ValueType, PromptHint? Hint = null, PromptHint? ValueHint = null)
     : ITypeDefinition
 {
     public string Name => "Map";

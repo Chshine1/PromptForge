@@ -29,9 +29,9 @@ public static class TypeMetadataBuilder
 
     private static SimpleType GetSimpleType(Type type)
     {
-        if (type == typeof(string)) return new SimpleType(type, "string");
-        if (type == typeof(bool)) return new SimpleType(type, "boolean");
-        return IsNumeric(type) ? new SimpleType(type, "number") : new SimpleType(type, type.Name);
+        if (type == typeof(string)) return new SimpleType("string");
+        if (type == typeof(bool)) return new SimpleType("boolean");
+        return IsNumeric(type) ? new SimpleType("number") : new SimpleType(type.Name);
     }
 
     public static ITypeDefinition GetDefinitionFromClrType(Type clrType)
@@ -80,7 +80,7 @@ public static class TypeMetadataBuilder
 
             var result = new RegisterResult
             {
-                Type = new MapType(clrType, args[1], valueHint),
+                Type = new MapType(args[1], valueHint),
                 TypeOccurrences = occurrences.Append(clrType).ToImmutableHashSet()
             };
             return clrToTypeDefinitions[clrType] = result;
@@ -99,7 +99,7 @@ public static class TypeMetadataBuilder
 
             var result = new RegisterResult
             {
-                Type = new ArrayType(clrType, args[0], elementHint),
+                Type = new ArrayType(args[0], elementHint),
                 TypeOccurrences = occurrences.Append(clrType).ToImmutableHashSet()
             };
             return clrToTypeDefinitions[clrType] = result;
@@ -135,7 +135,7 @@ public static class TypeMetadataBuilder
 
             var result = new RegisterResult
             {
-                Type = new ObjectType(clrType, objectAttr.Name ?? clrType.Name, properties, hint),
+                Type = new ObjectType(objectAttr.Name ?? clrType.Name, properties, hint),
                 TypeOccurrences = occurrences.ToImmutableHashSet()
             };
             return clrToTypeDefinitions[clrType] = result;
@@ -146,7 +146,7 @@ public static class TypeMetadataBuilder
         var final = new RegisterResult
         {
             Type = simpleTypeAttr is not null
-                ? new SimpleType(clrType, simpleTypeAttr.Name ?? clrType.Name)
+                ? new SimpleType(simpleTypeAttr.Name ?? clrType.Name)
                 : throw new InvalidOperationException(),
             TypeOccurrences = [clrType]
         };
