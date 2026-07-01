@@ -11,10 +11,8 @@ namespace PromptForge.Core;
 public partial class PromptCompiler : IPromptCompiler
 {
     private static readonly Regex placeholderRegex = PlaceHolderRegex();
-    
-    private ISerializer _serializer = new Serializer([], []);
 
-    public IPromptTemplate<T> Compile<T>(PromptContract contract)
+    public IPromptTemplate<T> Compile<T>(PromptContract contract, IMetadataScope scope)
     {
         var parts = new List<Func<T, string>>();
         var staticParts = new List<string>();
@@ -31,7 +29,7 @@ public partial class PromptCompiler : IPromptCompiler
                 // {{schema:input:FieldName}}
                 var propertyName = m.Groups["property"].Value;
                 var property = contract.InputType.Properties.First(p => p.Name == propertyName);
-                var schemaText = CompileInput(propertyName, property.TypeDefinition, property.Hint);
+                var schemaText = CompileInput(scope, propertyName, property.TypeDefinition, property.Hint);
                 staticParts.Add(schemaText);
                 parts.Add(_ => string.Empty);
             }
@@ -46,7 +44,7 @@ public partial class PromptCompiler : IPromptCompiler
             else
             {
                 // {{schema:output}}
-                var outputSchema = CompileOutput("output", contract.OutputType);
+                var outputSchema = CompileOutput(scope, "output", contract.OutputType.ClrType);
                 staticParts.Add(outputSchema);
                 parts.Add(_ => string.Empty);
             }
@@ -60,11 +58,6 @@ public partial class PromptCompiler : IPromptCompiler
         return staticParts.Count != parts.Count + 1
             ? throw new InvalidOperationException("Internal error: segment count mismatch.")
             : new PromptTemplate<T>(staticParts, parts);
-    }
-
-    public void SetSerialization(ISerializer serializer)
-    {
-        _serializer = serializer;
     }
 
     private Func<T, string> BuildValueGetter<T>(string fieldName)
@@ -97,13 +90,13 @@ public partial class PromptCompiler : IPromptCompiler
         return lambda.Compile();
     }
 
-    private static string CompileInput(string propertyName, ITypeDefinition type, PromptHint? propertyHint,
+    private static string CompileInput(IMetadataScope scope, string propertyName, Type clrType, PromptHint? propertyHint,
         int depth = 0)
     {
         var builder = new StringBuilder();
+        var type = scope[clrType] ?? throw new InvalidOperationException($"Type {clrType} is not registered.");
 
         var propertySemantic = propertyHint?.Semantic != null ? $": {propertyHint.Semantic}" : "";
-
         var typeSemanticHint = type.Hint?.Semantic != null ? $", {type.Hint.Semantic}" : "";
         var formatHint = propertyHint?.Format != null ? $", format: {propertyHint.Format}" :
             type.Hint?.Format != null ? $", format: {type.Hint.Format}" : "";
@@ -120,17 +113,17 @@ public partial class PromptCompiler : IPromptCompiler
         {
             case ArrayType arrayType:
                 builder.Append(
-                    CompileInput("each element", arrayType.ElementType, arrayType.ElementHint, depth));
+                    CompileInput(scope, "each element", arrayType.ElementType, arrayType.ElementHint, depth));
                 break;
             case MapType mapType:
                 builder.Append(
-                    CompileInput("each value", mapType.ValueType, mapType.ValueHint, depth));
+                    CompileInput(scope, "each value", mapType.ValueType, mapType.ValueHint, depth));
                 break;
             case ObjectType objectType:
                 foreach (var property in objectType.Properties)
                 {
                     builder.Append(
-                        CompileInput(property.Name, property.TypeDefinition, property.Hint, depth));
+                        CompileInput(scope, property.Name, property.TypeDefinition, property.Hint, depth));
                 }
 
                 break;
@@ -143,13 +136,13 @@ public partial class PromptCompiler : IPromptCompiler
         return builder.ToString();
     }
 
-    private static string CompileOutput(string propertyName, ITypeDefinition type, PromptHint? propertyHint = null,
+    private static string CompileOutput(IMetadataScope scope, string propertyName, Type clrType, PromptHint? propertyHint = null,
         int depth = 0)
     {
         var builder = new StringBuilder();
-
+        var type = scope[clrType] ?? throw new InvalidOperationException($"Type {clrType} is not registered.");
+        
         var propertyPurpose = propertyHint?.Purpose != null ? $": {propertyHint.Purpose}" : "";
-
         var formatHint = propertyHint?.Format != null ? $", format: {propertyHint.Format}" :
             type.Hint?.Format != null ? $", format: {type.Hint.Format}" : "";
         var constraintHint = type.Hint?.Constraint != null || propertyHint?.Constraint != null
@@ -167,24 +160,24 @@ public partial class PromptCompiler : IPromptCompiler
         {
             case ArrayType arrayType:
                 builder.Append(
-                    CompileOutput("each element", arrayType.ElementType, arrayType.ElementHint, depth));
+                    CompileOutput(scope, "each element", arrayType.ElementType, arrayType.ElementHint, depth));
                 break;
             case MapType mapType:
                 builder.Append(
-                    CompileOutput("each value", mapType.ValueType, mapType.ValueHint, depth));
+                    CompileOutput(scope, "each value", mapType.ValueType, mapType.ValueHint, depth));
                 break;
             case ObjectType objectType:
                 foreach (var property in objectType.Properties)
                 {
                     builder.Append(
-                        CompileOutput(property.Name, property.TypeDefinition, property.Hint, depth));
+                        CompileOutput(scope, property.Name, property.TypeDefinition, property.Hint, depth));
                 }
 
                 break;
             case SimpleType:
                 break;
             default:
-                throw new NotSupportedException($"The type {type} is not supported.");
+                throw new NotSupportedException($"The type {clrType.Name} is not supported.");
         }
 
         return builder.ToString();

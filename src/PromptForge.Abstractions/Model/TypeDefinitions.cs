@@ -3,45 +3,48 @@
 public interface ITypeDefinition
 {
     Type ClrType { get; }
-    string Name { get; set; }
-    PromptHint? Hint { get; set; }
+    string Name { get; }
+    PromptHint? Hint { get; }
+    public ITypeDefinition OverrideWith(TypeOverride @override);
 }
 
-public class SimpleType(Type clrType, string name, PromptHint? hint = null) : ITypeDefinition
+public record SimpleType(Type ClrType, string Name, PromptHint? Hint = null) : ITypeDefinition
 {
-    public Type ClrType => clrType;
-    public string Name { get; set; } = name;
-    public PromptHint? Hint { get; set; } = hint;
+    public ITypeDefinition OverrideWith(TypeOverride @override)
+    {
+        return this with { Hint = Hint is not null ? Hint.WithOther(@override.Hint) : @override.Hint };
+    }
 }
 
-public class ObjectType(Type clrType, string name, IEnumerable<PropertyDefinition> properties, PromptHint? hint = null)
+public record ObjectType(Type ClrType, string Name, IEnumerable<PropertyDefinition> Properties, PromptHint? Hint = null)
     : ITypeDefinition
 {
-    public Type ClrType => clrType;
-    public string Name { get; set; } = name;
-    public IEnumerable<PropertyDefinition> Properties { get; } = properties;
-    public PromptHint? Hint { get; set; } = hint;
+    public ITypeDefinition OverrideWith(TypeOverride @override)
+    {
+        // TODO
+        return this with { Hint = Hint is not null ? Hint.WithOther(@override.Hint) : @override.Hint };
+    }
 }
 
-public class ArrayType(
-    Type clrType,
-    ITypeDefinition elementType,
-    PromptHint? hint = null,
-    PromptHint? elementHint = null) : ITypeDefinition
+public record ArrayType(
+    Type ClrType,
+    Type ElementType,
+    PromptHint? Hint = null,
+    PromptHint? ElementHint = null) : ITypeDefinition
 {
-    public Type ClrType => clrType;
-    public string Name { get; set; } = "Array";
-    public ITypeDefinition ElementType { get; } = elementType;
-    public PromptHint? Hint { get; set; } = hint;
-    public PromptHint? ElementHint { get; set; } = elementHint;
+    public string Name => "Array";
+    public ITypeDefinition OverrideWith(TypeOverride @override)
+    {
+        throw new NotImplementedException();
+    }
 }
 
-public class MapType(Type clrType, ITypeDefinition valueType, PromptHint? hint = null, PromptHint? valueHint = null)
+public record MapType(Type ClrType, Type ValueType, PromptHint? Hint = null, PromptHint? ValueHint = null)
     : ITypeDefinition
 {
-    public Type ClrType => clrType;
-    public string Name { get; set; } = "Map";
-    public ITypeDefinition ValueType { get; } = valueType;
-    public PromptHint? Hint { get; set; } = hint;
-    public PromptHint? ValueHint { get; set; } = valueHint;
+    public string Name => "Map";
+    public ITypeDefinition OverrideWith(TypeOverride @override)
+    {
+        throw new NotImplementedException();
+    }
 }

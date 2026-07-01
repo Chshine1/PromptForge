@@ -2,10 +2,10 @@
 
 public class PropertyDefinition(
     string name,
-    ITypeDefinition typeDefinition,
+    Type typeDefinition,
     PromptHint? hint = null)
 {
     public string Name { get; set; } = name;
-    public ITypeDefinition TypeDefinition { get; set; } = typeDefinition;
+    public Type TypeDefinition { get; set; } = typeDefinition;
     public PromptHint? Hint { get; set; } = hint;
 }
