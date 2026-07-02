@@ -6,9 +6,9 @@ namespace PromptForge.Core.Builders;
 public class PromptBuilder<TIn, TOut>(IPromptCompiler compiler, IMetadataScopeBuilder scopeBuilder)
     where TIn : notnull where TOut : notnull
 {
+    private readonly Dictionary<Type, ITypeConfiguration> _types = [];
     private ILlmInvoker? _llmInvoker;
     private string? _template;
-    private readonly Dictionary<Type, ITypeConfiguration> _types = [];
 
     public PromptBuilder<TIn, TOut> WithLlmInvoker(ILlmInvoker llmInvoker)
     {

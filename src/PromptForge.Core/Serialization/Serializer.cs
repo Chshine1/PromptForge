@@ -18,33 +18,9 @@ public class Serializer(ImmutableDictionary<Type, SerializationConfig> configs) 
 
         if (configs.TryGetValue(ownerType, out var ownerConfig) &&
             ownerConfig.PropertySerializers.TryGetValue(propertyName, out var propSerializer))
-        {
             value = propSerializer(value, this);
-        }
 
         return ConvertToTemplateString(value, prop.PropertyType);
-    }
-
-    private string ConvertToTemplateString(object? value, Type valueType)
-    {
-        if (value == null)
-            return string.Empty;
-
-        if (configs.TryGetValue(valueType, out var valueConfig) && valueConfig.TypeSerializer != null)
-            return valueConfig.TypeSerializer(value, this);
-
-        if (value is string s)
-            return s;
-
-        var json = JsonSerializer.Serialize(value, valueType);
-        if (valueType == typeof(string) || valueType == typeof(char))
-        {
-            return json is ['"', _, ..] && json[^1] == '"'
-                ? json[1..^1]
-                : json;
-        }
-
-        return json;
     }
 
     public string Serialize<T>(T value) where T : notnull
@@ -67,13 +43,9 @@ public class Serializer(ImmutableDictionary<Type, SerializationConfig> configs) 
             var propValue = prop.GetValue(value);
 
             if (propValue is not null && config.PropertySerializers.TryGetValue(prop.Name, out var propertySerializer))
-            {
                 dict[prop.Name] = propertySerializer(propValue, this);
-            }
             else
-            {
                 dict[prop.Name] = propValue;
-            }
         }
 
         return JsonSerializer.Serialize(dict);
@@ -116,5 +88,25 @@ public class Serializer(ImmutableDictionary<Type, SerializationConfig> configs) 
         }
 
         return obj;
+    }
+
+    private string ConvertToTemplateString(object? value, Type valueType)
+    {
+        if (value == null)
+            return string.Empty;
+
+        if (configs.TryGetValue(valueType, out var valueConfig) && valueConfig.TypeSerializer != null)
+            return valueConfig.TypeSerializer(value, this);
+
+        if (value is string s)
+            return s;
+
+        var json = JsonSerializer.Serialize(value, valueType);
+        if (valueType == typeof(string) || valueType == typeof(char))
+            return json is ['"', _, ..] && json[^1] == '"'
+                ? json[1..^1]
+                : json;
+
+        return json;
     }
 }

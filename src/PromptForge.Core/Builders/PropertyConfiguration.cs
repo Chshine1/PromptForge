@@ -16,7 +16,7 @@ public class PropertyConfiguration<T, TProperty>(string propertyName, IMetadataS
     {
         scopeBuilder.SetPropertySerializer<T, TProperty>(propertyName, serializer);
         scopeBuilder.OverrideProperty(typeof(T), propertyName,
-            new PropertyOverride(Hint: new PromptHint(Format: format)));
+            new PropertyOverride(new PromptHint(Format: format)));
         return this;
     }
 
@@ -25,7 +25,7 @@ public class PropertyConfiguration<T, TProperty>(string propertyName, IMetadataS
     {
         scopeBuilder.SetPropertyDeserializer<T, TProperty>(propertyName, deserializer);
         scopeBuilder.OverrideProperty(typeof(T), propertyName,
-            new PropertyOverride(Hint: new PromptHint(Format: format)));
+            new PropertyOverride(new PromptHint(Format: format)));
         return this;
     }
 }

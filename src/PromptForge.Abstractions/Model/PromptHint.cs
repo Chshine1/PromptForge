@@ -14,9 +14,9 @@ public record PromptHint(
     {
         if (other is null) return this;
         return new PromptHint(
-            Semantic: string.IsNullOrWhiteSpace(other.Semantic) ? Semantic : other.Semantic,
-            Purpose: string.IsNullOrWhiteSpace(other.Purpose) ? Purpose : other.Purpose,
-            Constraint: string.IsNullOrWhiteSpace(other.Constraint) ? Constraint : other.Constraint,
-            Format: string.IsNullOrWhiteSpace(other.Format) ? Format : other.Format);
+            string.IsNullOrWhiteSpace(other.Semantic) ? Semantic : other.Semantic,
+            string.IsNullOrWhiteSpace(other.Purpose) ? Purpose : other.Purpose,
+            string.IsNullOrWhiteSpace(other.Constraint) ? Constraint : other.Constraint,
+            string.IsNullOrWhiteSpace(other.Format) ? Format : other.Format);
     }
 }

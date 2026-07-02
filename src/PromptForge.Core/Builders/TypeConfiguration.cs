@@ -16,14 +16,14 @@ public class TypeConfiguration<T>(IMetadataScopeBuilder scopeBuilder) : ITypeCon
     public TypeConfiguration<T> WithSerialization(Func<T, ISerializer, string> serializer, string? format = null)
     {
         scopeBuilder.SetTypeSerializer(serializer);
-        scopeBuilder.OverrideType(typeof(T), new TypeOverride(Hint: new PromptHint(Format: format)));
+        scopeBuilder.OverrideType(typeof(T), new TypeOverride(new PromptHint(Format: format)));
         return this;
     }
 
     public TypeConfiguration<T> WithDeserialization(Func<string, ISerializer, T> deserializer, string? format = null)
     {
         scopeBuilder.SetTypeDeserializer(deserializer);
-        scopeBuilder.OverrideType(typeof(T), new TypeOverride(Hint: new PromptHint(Format: format)));
+        scopeBuilder.OverrideType(typeof(T), new TypeOverride(new PromptHint(Format: format)));
         return this;
     }
 

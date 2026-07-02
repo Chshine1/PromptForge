@@ -27,7 +27,7 @@ public static partial class TypeMetadataRegistry
 
         var typeHints = HintAttributes.CollectFromType(clrType);
         var typeHint = typeHints.BuildHint(HintTarget.TypeAndProperty);
-        
+
         // ReSharper disable InvertIf
         if (TryBuildSimpleResult(clrType, typeHint, out var simpleResult))
         {
@@ -48,7 +48,7 @@ public static partial class TypeMetadataRegistry
             clrToTypeDefinitions[clrType] = arrayResult;
             return arrayResult;
         }
-        
+
         if (TryBuildObjectResult(clrType, typeHint, out var objectResult))
         {
             clrToTypeDefinitions[clrType] = objectResult;
@@ -92,15 +92,21 @@ public static partial class TypeMetadataRegistry
             _formatHints = formatHints;
         }
 
-        public static HintAttributes CollectFromType(Type type) => new(
-            [..type.GetCustomAttributes<InputHintAttribute>()],
-            [..type.GetCustomAttributes<OutputHintAttribute>()],
-            [..type.GetCustomAttributes<FormatHintAttribute>()]);
+        public static HintAttributes CollectFromType(Type type)
+        {
+            return new HintAttributes(
+                [.. type.GetCustomAttributes<InputHintAttribute>()],
+                [.. type.GetCustomAttributes<OutputHintAttribute>()],
+                [.. type.GetCustomAttributes<FormatHintAttribute>()]);
+        }
 
-        public static HintAttributes CollectFromMember(MemberInfo member) => new(
-            [..member.GetCustomAttributes<InputHintAttribute>()],
-            [..member.GetCustomAttributes<OutputHintAttribute>()],
-            [..member.GetCustomAttributes<FormatHintAttribute>()]);
+        public static HintAttributes CollectFromMember(MemberInfo member)
+        {
+            return new HintAttributes(
+                [.. member.GetCustomAttributes<InputHintAttribute>()],
+                [.. member.GetCustomAttributes<OutputHintAttribute>()],
+                [.. member.GetCustomAttributes<FormatHintAttribute>()]);
+        }
 
         public PromptHint? BuildHint(HintTarget target)
         {
@@ -109,7 +115,7 @@ public static partial class TypeMetadataRegistry
             var format = _formatHints.FirstOrDefault(a => a.Target == target);
 
             PromptHint? hint = null;
-            if (input is not null) hint = new PromptHint(Semantic: input.Semantic);
+            if (input is not null) hint = new PromptHint(input.Semantic);
 
             if (output is not null)
             {

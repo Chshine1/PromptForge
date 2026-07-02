@@ -34,23 +34,19 @@ public record TypeOverride(
         Dictionary<string, PropertyOverride>? mergedProperties;
         var otherProperties = other?.Properties;
         if (Properties is not null)
-        {
             mergedProperties = otherProperties is not null ? MergeProperties(Properties, otherProperties) : Properties;
-        }
         else
-        {
             mergedProperties = other?.Properties;
-        }
 
         return other is null
             ? this
             : new TypeOverride(
-                Hint: Hint is not null ? Hint.WithOther(other.Hint) : other.Hint,
-                Properties: mergedProperties,
-                ArrayElementHint: ArrayElementHint is not null
+                Hint is not null ? Hint.WithOther(other.Hint) : other.Hint,
+                mergedProperties,
+                ArrayElementHint is not null
                     ? ArrayElementHint.WithOther(other.ArrayElementHint)
                     : other.ArrayElementHint,
-                MapValueHint: MapValueHint is not null ? MapValueHint.WithOther(other.MapValueHint) : other.MapValueHint
+                MapValueHint is not null ? MapValueHint.WithOther(other.MapValueHint) : other.MapValueHint
             );
     }
 }

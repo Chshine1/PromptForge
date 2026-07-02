@@ -6,6 +6,13 @@ namespace PromptForge.Core.Metadata.Registry;
 
 public static partial class TypeMetadataRegistry
 {
+    private static readonly HashSet<Type> numericTypes =
+    [
+        typeof(byte), typeof(sbyte), typeof(short), typeof(ushort),
+        typeof(int), typeof(uint), typeof(long), typeof(ulong),
+        typeof(float), typeof(double), typeof(decimal)
+    ];
+
     private static bool TryBuildSimpleResult(
         Type clrType,
         PromptHint? typeHint,
@@ -21,7 +28,7 @@ public static partial class TypeMetadataRegistry
             };
             return true;
         }
-        
+
         if (IsPrimitiveLike(clrType))
         {
             result = new RegisterResult
@@ -31,20 +38,15 @@ public static partial class TypeMetadataRegistry
             };
             return true;
         }
-        
+
         result = default;
         return false;
     }
 
-
-    private static readonly HashSet<Type> numericTypes =
-    [
-        typeof(byte), typeof(sbyte), typeof(short), typeof(ushort),
-        typeof(int), typeof(uint), typeof(long), typeof(ulong),
-        typeof(float), typeof(double), typeof(decimal)
-    ];
-
-    private static bool IsNumeric(Type type) => numericTypes.Contains(type);
+    private static bool IsNumeric(Type type)
+    {
+        return numericTypes.Contains(type);
+    }
 
     private static SimpleType GetSimpleType(Type type, PromptHint? typeHint)
     {

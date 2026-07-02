@@ -64,10 +64,7 @@ public class Program
                     ModuleId = "test_module_1",
                     Data = new StructData
                     {
-                        Data = new Dictionary<string, string>
-                        {
-                            ["message"] = "Hello World!"
-                        }
+                        Data = new Dictionary<string, string> { ["message"] = "Hello World!" }
                     }
                 }
             ],

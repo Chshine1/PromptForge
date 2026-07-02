@@ -15,7 +15,8 @@ public partial class PromptCompiler(ISerializerFactory serializerFactory) : IPro
 {
     private static readonly Regex placeholderRegex = PlaceHolderRegex();
 
-    public IPromptPipeline<TIn, TOut> Compile<TIn, TOut>(ILlmInvoker llmInvoker, string template, IMetadataScope scope) where TIn : notnull where TOut : notnull
+    public IPromptPipeline<TIn, TOut> Compile<TIn, TOut>(ILlmInvoker llmInvoker, string template, IMetadataScope scope)
+        where TIn : notnull where TOut : notnull
     {
         var parts = new List<Func<TIn, string>>();
         var staticParts = new List<string>();
@@ -127,13 +128,11 @@ public partial class PromptCompiler(ISerializerFactory serializerFactory) : IPro
                 break;
             case ObjectType objectType:
                 foreach (var property in objectType.Properties)
-                {
                     builder.Append(CompileInput(
                         scope, property.Name,
                         GetTypeDefinition(property.TypeDefinition, scope),
                         property.Hint,
                         depth));
-                }
 
                 break;
             case SimpleType:
@@ -183,12 +182,10 @@ public partial class PromptCompiler(ISerializerFactory serializerFactory) : IPro
                 break;
             case ObjectType objectType:
                 foreach (var property in objectType.Properties)
-                {
                     builder.Append(CompileOutput(scope, property.Name,
                         GetTypeDefinition(property.TypeDefinition, scope),
                         property.Hint,
                         depth));
-                }
 
                 break;
             case SimpleType:
@@ -209,10 +206,7 @@ public partial class PromptCompiler(ISerializerFactory serializerFactory) : IPro
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string MergeConstraints(string? c1, string? c2)
     {
-        if (c1 != null)
-        {
-            return c2 != null ? $"{c1} && {c2}" : c1;
-        }
+        if (c1 != null) return c2 != null ? $"{c1} && {c2}" : c1;
 
         return c2 ?? throw new InvalidOperationException();
     }

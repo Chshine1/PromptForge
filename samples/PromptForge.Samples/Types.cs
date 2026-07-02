@@ -68,18 +68,20 @@ public class ModuleSchema
 [ObjectType]
 public class NeuroOperation
 {
-    [PromptIgnore]
-    public required string RuleId { get; init; }
+    [PromptIgnore] public required string RuleId { get; init; }
 
-    [InputHint(Semantic = "possible structurally incomplete commands, those incomplete ones need implementations to match the schemas")]
-    [InputHint(Target = HintTarget.ArrayElement, Semantic = "a command's params may be incomplete comparing the given schema")]
+    [InputHint(Semantic =
+        "possible structurally incomplete commands, those incomplete ones need implementations to match the schemas")]
+    [InputHint(Target = HintTarget.ArrayElement,
+        Semantic = "a command's params may be incomplete comparing the given schema")]
     public required BufferOperation[] Commands { get; init; }
-    
+
     [InputHint(Semantic = "a key provides cases: merging into a command, a direct neuro operation, a ")]
     [InputHint(Target = HintTarget.MapValue,
-        Semantic = "command case: a neuro expectation of the command's params which may combine with a structural incomplete one. " + 
-                   "neuro case: a complete unconstrained description. " +
-                   "meta case: metadata relating these neuro info to the structural commands above")]
+        Semantic =
+            "command case: a neuro expectation of the command's params which may combine with a structural incomplete one. " +
+            "neuro case: a complete unconstrained description. " +
+            "meta case: metadata relating these neuro info to the structural commands above")]
     [FormatHint(Format = "the key is a string 'command: <command_name>'|'neuro'|'meta'")]
     public required Dictionary<string, StructData> Semantics { get; init; }
 }

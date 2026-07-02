@@ -3,7 +3,7 @@
 public class SerializationConfig
 {
     public List<string> IgnoredProperties { get; init; } = [];
-    
+
     public Func<object, ISerializer, string>? TypeSerializer { get; set; }
     public Dictionary<string, Func<object?, ISerializer, string>> PropertySerializers { get; init; } = new();
 

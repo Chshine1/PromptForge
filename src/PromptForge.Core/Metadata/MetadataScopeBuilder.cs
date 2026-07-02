@@ -9,12 +9,13 @@ namespace PromptForge.Core.Metadata;
 
 public class MetadataScopeBuilder(IEnumerable<Type> scopeTypes) : IMetadataScopeBuilder
 {
+    private readonly Dictionary<Type, SerializationConfig> _serializationConfigs = new();
+
     private readonly ImmutableDictionary<Type, ITypeDefinition> _typeDefinitions = scopeTypes
         .Select(t => new KeyValuePair<Type, ITypeDefinition>(t, TypeMetadataRegistry.GetDefinitionFromClrType(t)))
         .ToImmutableDictionary();
 
     private readonly Dictionary<Type, TypeOverride> _typeOverrides = new();
-    private readonly Dictionary<Type, SerializationConfig> _serializationConfigs = new();
 
     public void SetTypeSerializer<T>(Func<T, ISerializer, string> serializer)
     {
@@ -75,11 +76,9 @@ public class MetadataScopeBuilder(IEnumerable<Type> scopeTypes) : IMetadataScope
     public void OverrideProperty(Type type, string propertyName, PropertyOverride newPropertyOverride)
     {
         var newTypeOverride = new TypeOverride(Properties: new Dictionary<string, PropertyOverride>
-            { [propertyName] = newPropertyOverride });
+        { [propertyName] = newPropertyOverride });
         if (_typeOverrides.TryGetValue(type, out var existingType))
-        {
             newTypeOverride = existingType.WithOther(newTypeOverride);
-        }
 
         _typeOverrides[type] = newTypeOverride;
     }
@@ -106,7 +105,6 @@ public class MetadataScopeBuilder(IEnumerable<Type> scopeTypes) : IMetadataScope
                 (kvp1, kvp2) =>
                 {
                     if (kvp1.Value is ObjectType objectType)
-                    {
                         kvp2.Value.IgnoredProperties.AddRange(kvp2.Key
                             .GetProperties(BindingFlags.Public | BindingFlags.Instance)
                             .Select(p => p.Name)
@@ -115,7 +113,6 @@ public class MetadataScopeBuilder(IEnumerable<Type> scopeTypes) : IMetadataScope
                                 p => p
                             )
                         );
-                    }
                     return new KeyValuePair<Type, TypeMetadata>(kvp1.Key, new TypeMetadata(kvp1.Value, kvp2.Value));
                 }
             )
