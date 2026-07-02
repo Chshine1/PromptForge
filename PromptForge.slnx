@@ -1,11 +1,16 @@
 <Solution>
   <Folder Name="/ProjectItems/">
     <File Path=".gitignore" />
+    <File Path="CONTRIBUTING.md" />
+    <File Path="LICENSE" />
     <File Path="README.md" />
+    <File Path="ROADMAP.md" />
+  </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/PromptForge.Samples/PromptForge.Samples.csproj" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/PromptForge.Abstractions/PromptForge.Abstractions.csproj" />
-    <Project Path="src/PromptForge.Cli/PromptForge.Cli.csproj" />
     <Project Path="src/PromptForge.Core/PromptForge.Core.csproj" />
   </Folder>
 </Solution>

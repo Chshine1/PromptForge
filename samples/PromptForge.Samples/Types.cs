@@ -3,7 +3,7 @@ using PromptForge.Abstractions.Attributes.Hints;
 using PromptForge.Abstractions.Attributes.Types;
 using PromptForge.Abstractions.Enums;
 
-namespace PromptForge.Cli;
+namespace PromptForge.Samples;
 
 [SimpleType]
 [InputHint(Semantic = "any JSON object")]

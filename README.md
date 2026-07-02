@@ -1,97 +1,46 @@
-﻿## README
+﻿# PromptForge
 
-**PromptForge** generates LLM system prompts from structured metadata extracted from code, eliminating manual prompt
-writing.
+A type‑first prompt engineering framework for .NET. Define your LLM inputs and outputs as strongly typed C# objects, and
+let PromptForge handle serialization, template rendering, schema injection, and response parsing.
 
-### Design
+## Quick Start
 
-All prompt information originates from a single source of truth, the `AbilityContract`. This contract defines
-input/output types, semantic annotations, constraints, serialization syntax, and task instructions. Metadata is
-extracted from source code (via Roslyn attributes) or API specifications (OpenAPI, Protobuf) and compiled into a dense,
-natural-language system prompt. Compilation is modular: renderers handle sections (role, input, output, constraints),
-optimizers compress and refine the final text. JSON Pointer and a path naturalizer translate structural references into
-readable constraints.
+1. Install the NuGet package (coming soon) or reference the project.
+2. Define your input/output types:
 
-### Purpose
-
-Make prompt engineering reproducible and maintainable by binding it to code artifacts instead of ad‑hoc text.
-
-### Input DSL (describing data the LLM will receive)
-
-**Goal**: Expose only what the model cannot infer from a JSON instance.
-
-**Syntax outline**:
-```
-<property-name> [:<property-hint-semantic>] [(<type-info>)] :
+```csharp
+public record MyInput(string Question);
+public record MyOutput(string Answer);
 ```
 
-Where `<type-info>` is built as:
-```
-("a" | "an") <type-name> [, <type-hint-semantic>] [, format: <format>]
-```
+3. Build a pipeline and run it:
 
-**Degradation rules** (applied in order until a stable line is reached):
-1. If the property has no hint and the type has no hint, no merged format, and the type is not Array or Map → remove the `(...)` part.
-2. If the property has no hint → remove the `:<property-hint-semantic>` and the preceding colon.
-3. If both the property hint and the type info part are absent (i.e. the line would be empty) → remove the whole line.
-4. Inside `(...)`, if the type has no hint → remove the `<type-hint-semantic>` part.
-5. If neither the property nor the type contributes a format → remove the `format:` part.
-6. If after all removals the parentheses contain only `an Array` or `a Map` → append `, each element` (for Array) or `, each value` (for Map) right after the type name, inside the parentheses.
+```csharp
+var pipeline = new PromptBuilderFactory(compiler)
+    .Create<MyInput, MyOutput>()
+    .WithLlmInvoker(new MyLlmInvoker())
+    .WithTemplate("Answer the following: {{Question}}")
+    .WithOutputDeserializer(s => new MyOutput(s))
+    .Build();
 
-**Object / Array / Map expansion**:
-- Object: add an indented block recursively listing its properties.
-- Array: add an indented line `each element:` followed by the element type’s description.
-- Map: add an indented line `each value:` followed by the value type’s description.
-
-**Example** (based on `ModuleState`):
-```
-ModuleState:
-  state_of: the modules which this state is shared amongst (a Bitmask, its instance has many bits which can be set either "0" or "1", format: binary string)
-  conditions (an Array):
-    each element:
-      predicate: a natural language predicate to be evaluated
+MyOutput result = await pipeline.RunAsync(new MyInput("What is PromptForge?"));
+Console.WriteLine(result.Answer);
 ```
 
----
+See `src/PromptForge.Samples` for more complete examples.
 
-### Output DSL (describing data the LLM must generate)
+## Status
 
-**Goal**: Provide exactly the constraints, purpose and format hints the model needs to produce correct output; type and structure are never omitted because there is no instance to learn from.
+This project is in early development (v0.0.1). APIs may change. Contributions are very welcome –
+see [CONTRIBUTING.md](CONTRIBUTING.md).
 
-**Syntax outline**:
-```
-<property-name> [:<purpose>] (<type-name> [, format: <format>] [, <constraints>]) :
-```
+## Why PromptForge?
 
-**Degradation rules** (simpler, because type is mandatory):
-- The type name is always present.
-- If a property has no purpose, no constraints and no format, the parentheses contain only the type: `(a string)`.
-- A property is **never removed** from the output, even if it has no extra annotations; the field name and type are essential generation instructions.
+- **Type safety**: Eliminate brittle string concatenation and manual JSON parsing.
+- **Declarative schema injection**: Automatically describe input/output structures in your prompts.
+- **Extensible**: Custom serializers, middlewares, and plugins.
+- **Native .NET feel**: Designed with dependency injection, expression trees, and fluent APIs.
 
-**Container expansion**:
-- Object: indented block with its properties.
-- Array: `each element:` with element type and annotations.
-- Map: `each value:` with value type and annotations.
-- An object may carry an overall `format` clause on its first line, e.g.:
-  ```
-  UserInfo (format: "<name>"-<age:number>-"<email>"-"<role>"):
-  ```
+## License
 
-**Example**:
-```
-UserInfo (format: "<name>"-<age:number>-"<email>"-"<role>"):
-  name: the user's real name (a string, length between 1 and 50):
-  age: age (a number, between 1 and 150):
-  email (a string, matching a valid email):
-  role (a string, one of: "admin", "user"):
-```
-
-### Usage
-
-```bash
-# Extract metadata from C# project
-promptforge extract ./src/MyService --output contract.json
-
-# Compile contract into system prompt
-promptforge compile contract.json --output prompt.txt
-```
+MIT (see [LICENSE](LICENSE))
