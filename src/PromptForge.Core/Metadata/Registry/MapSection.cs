@@ -33,7 +33,7 @@ public static partial class TypeMetadataRegistry
         result = new RegisterResult
         {
             Type = new MapType(args[1], hint, valueHint),
-            TypeOccurrences = valueResult.TypeOccurrences.Append(clrType).ToImmutableHashSet()
+            TypeOccurrences = [.. valueResult.TypeOccurrences, clrType]
         };
         return true;
     }

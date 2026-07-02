@@ -10,8 +10,7 @@ public class Serializer(ImmutableDictionary<Type, SerializationConfig> configs) 
     public string SerializePropertyValue(object owner, string propertyName, Type ownerType)
     {
         var prop = ownerType.GetProperty(propertyName,
-            BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
-        if (prop is null)
+            BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase) ??
             throw new ArgumentException($"Property '{propertyName}' not found on type '{ownerType.Name}'.");
 
         var value = prop.GetValue(owner);

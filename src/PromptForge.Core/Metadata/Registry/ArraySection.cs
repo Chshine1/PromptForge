@@ -31,7 +31,7 @@ public static partial class TypeMetadataRegistry
         result = new RegisterResult
         {
             Type = new ArrayType(args[0], hint, elementHint),
-            TypeOccurrences = elementResult.TypeOccurrences.Append(clrType).ToImmutableHashSet()
+            TypeOccurrences = [.. elementResult.TypeOccurrences, clrType]
         };
         return true;
     }

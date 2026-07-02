@@ -6,7 +6,7 @@ public interface ITypeDefinition
 {
     string Name { get; }
     PromptHint? Hint { get; }
-    public ITypeDefinition OverrideWith(TypeOverride @override);
+    ITypeDefinition OverrideWith(TypeOverride @override);
 }
 
 public record SimpleType(string Name, PromptHint? Hint = null) : ITypeDefinition

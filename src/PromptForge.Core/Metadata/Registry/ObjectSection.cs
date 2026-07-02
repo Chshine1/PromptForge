@@ -61,7 +61,7 @@ public static partial class TypeMetadataRegistry
         result = new RegisterResult
         {
             Type = new ObjectType(objectAttr.Name ?? clrType.Name, properties, typeHint),
-            TypeOccurrences = occurrences.ToImmutableHashSet()
+            TypeOccurrences = [.. occurrences]
         };
         return true;
     }

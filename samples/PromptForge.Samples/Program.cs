@@ -50,7 +50,7 @@ public class Program
             )
             .WithType<string[]>(stringArray => stringArray
                 .WithDeserialization(
-                    (serialized, _) => serialized.Split(',').Select(s => s.Trim()).ToArray(),
+                    (serialized, _) => [.. serialized.Split(',').Select(s => s.Trim())],
                     "comma separated strings")
             );
         var evaluationPipeline = evaluationBuilder.Build();

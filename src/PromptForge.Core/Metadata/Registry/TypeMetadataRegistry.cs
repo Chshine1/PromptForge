@@ -14,7 +14,7 @@ public readonly struct RegisterResult
 
 public static partial class TypeMetadataRegistry
 {
-    private static readonly Dictionary<Type, RegisterResult> clrToTypeDefinitions = new();
+    private static readonly Dictionary<Type, RegisterResult> clrToTypeDefinitions = [];
 
     public static ITypeDefinition GetDefinitionFromClrType(Type clrType)
     {

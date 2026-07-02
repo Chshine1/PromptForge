@@ -31,7 +31,7 @@ public partial class PromptCompiler(ISerializerFactory serializerFactory) : IPro
         foreach (Match m in placeholderRegex.Matches(template))
         {
             if (m.Index > lastIndex)
-                staticParts.Add(template.Substring(lastIndex, m.Index - lastIndex));
+                staticParts.Add(template[lastIndex..m.Index]);
 
             if (m.Groups["property"].Success)
             {
@@ -71,9 +71,8 @@ public partial class PromptCompiler(ISerializerFactory serializerFactory) : IPro
 
     private static Func<T, string> BuildValueGetter<T>(string fieldName, ISerializer serializer)
     {
-        var prop = typeof(T).GetProperty(fieldName,
-            BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
-        if (prop == null)
+        if (typeof(T).GetProperty(fieldName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase) ==
+            null)
             throw new ArgumentException($"Property '{fieldName}' not found on type '{typeof(T).Name}'.");
 
         var target = Expression.Parameter(typeof(T), "target");

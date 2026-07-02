@@ -11,8 +11,8 @@ internal class PromptPipeline<TIn, TOut>(
     ISerializer serializer)
     : IPromptPipeline<TIn, TOut> where TIn : notnull where TOut : notnull
 {
-    private readonly string[] _staticParts = staticParts.ToArray();
-    private readonly Func<TIn, string>[] _valueGetters = valueGetters.ToArray();
+    private readonly string[] _staticParts = [.. staticParts];
+    private readonly Func<TIn, string>[] _valueGetters = [.. valueGetters];
 
     public async Task<TOut?> RunAsync(TIn input, CancellationToken ct = default)
     {

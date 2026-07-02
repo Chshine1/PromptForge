@@ -8,7 +8,7 @@ namespace PromptForge.Samples;
 [SimpleType]
 [InputHint(Semantic = "any JSON object")]
 [OutputHint(Purpose = "any JSON object")]
-public struct StructData
+public readonly struct StructData
 {
     public object Data { get; init; }
 }
